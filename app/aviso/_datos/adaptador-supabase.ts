@@ -47,7 +47,7 @@ export function crearAdaptadorSupabase(supabase: SupabaseClient): AdaptadorExtra
         },
         { onConflict: "notice_id" }
       );
-      if (e1) throw new Error("No se pudo guardar el mensaje del aviso");
+      if (e1) throw new Error(`No se pudo guardar el mensaje del aviso (${e1.code}: ${e1.message})`);
 
       const { error: e2 } = await supabase
         .from("notice_steps")
