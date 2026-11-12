@@ -8,10 +8,11 @@ import type { Variant } from "@/lib/brand";
 //   - pasos a seguir (R6)
 //   - días elegidos ("Elegir días")
 //   - relación del contacto (Pareja, Papá…)
-// Activo: "supabase". El adaptador "fichero" queda solo como respaldo local.
+// Activo: "fichero" (temporal) mientras la base de pruebas no tiene las tablas de la 0010.
+// Cuando existan, cambiar a "supabase".
 // No hay que tocar pantallas ni acciones.
 export const CONFIG_EMISOR = {
-  adaptadorExtras: "supabase" as "fichero" | "supabase",
+  adaptadorExtras: "fichero" as "fichero" | "supabase",
 
   // Ruta del fichero JSON del adaptador "fichero" (ignorado por git).
   // En Vercel el disco es de solo lectura: este adaptador solo sirve en local.
