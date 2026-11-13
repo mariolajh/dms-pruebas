@@ -55,7 +55,6 @@ export default async function Aviso() {
     dias: datos?.dias ?? [],
     graciaMin: aviso?.grace_minutes ?? cfg.graciaPorDefecto,
     mensaje: datos?.mensaje ?? "",
-    pasos: datos?.pasos?.length ? datos.pasos : cfg.pasosObligatorios ? [""] : [],
     contactos: enAviso,
   };
 
@@ -64,14 +63,11 @@ export default async function Aviso() {
       t={textosAviso(brand.variant)}
       inicial={inicial}
       opciones={opciones}
-      pasosObligatorios={cfg.pasosObligatorios}
       limites={{
         graciaOpciones: CONFIG_EMISOR.gracia.opciones,
         graciaMin: CONFIG_EMISOR.gracia.minimoMin,
         graciaMax: CONFIG_EMISOR.gracia.maximoMin,
         mensajeMax: CONFIG_EMISOR.mensajeMax,
-        pasoMax: CONFIG_EMISOR.pasoMax,
-        pasosMax: CONFIG_EMISOR.pasosMax,
       }}
       volverHref={aviso ? "/home" : "/contactos"}
     />

@@ -34,12 +34,12 @@ export const CONFIG_EMISOR = {
     cerca: {
       graciaPorDefecto: 30,
       // Pasos a seguir obligatorios (decidido con Mariola el 10/11; el PRD los hacía opcionales).
-      pasosObligatorios: true,
+      pasosObligatorios: false,
       horaPorDefecto: "20:00",
     },
     montana: {
       graciaPorDefecto: 120,
-      pasosObligatorios: true,
+      pasosObligatorios: false,
       horaPorDefecto: "20:00",
     },
   } satisfies Record<Variant, { graciaPorDefecto: number; pasosObligatorios: boolean; horaPorDefecto: string }>,

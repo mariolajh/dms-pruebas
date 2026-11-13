@@ -9,8 +9,9 @@ import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import { Badge, BarraTitulo, Numero, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import { rellenar, type TextosAviso } from "./textos";
 
-// E · Configurar aviso · Hora / Pasos / Contactos → Resumen → Guardando → Inicio.
+// E · Configurar aviso · Hora / Contactos → Resumen → Guardando → Inicio.
 // Todo el asistente vive en una sola pantalla de cliente y se guarda al final (apagado).
+// PRD 12/11 (R6): los "pasos a seguir" son los contactos en orden. Ya no se escriben a mano.
 
 export type ContactoOpcion = { id: string; name: string; accepted: boolean; relacion: string | null };
 
@@ -21,7 +22,6 @@ export type Inicial = {
   dias: number[];
   graciaMin: number;
   mensaje: string;
-  pasos: string[];
   contactos: string[];
 };
 
@@ -30,26 +30,23 @@ type Limites = {
   graciaMin: number;
   graciaMax: number;
   mensajeMax: number;
-  pasoMax: number;
-  pasosMax: number;
 };
 
-type Paso = "hora" | "pasos" | "contactos" | "resumen";
+type Paso = "hora" | "contactos" | "resumen";
 
-const ORDEN: Paso[] = ["hora", "pasos", "contactos", "resumen"];
+const ORDEN: Paso[] = ["hora", "contactos", "resumen"];
+const PASOS_VISIBLES = 2;
 
 export default function ConfigurarAviso({
   t,
   inicial,
   opciones,
-  pasosObligatorios,
   limites,
   volverHref,
 }: {
   t: TextosAviso;
   inicial: Inicial;
   opciones: ContactoOpcion[];
-  pasosObligatorios: boolean;
   limites: Limites;
   volverHref: string;
 }) {
@@ -63,7 +60,6 @@ export default function ConfigurarAviso({
   const [graciaOtro, setGraciaOtro] = useState(esOtro);
   const [gracia, setGracia] = useState(inicial.graciaMin);
   const [mensaje, setMensaje] = useState(inicial.mensaje);
-  const [pasos, setPasos] = useState<string[]>(inicial.pasos);
   const [enAviso, setEnAviso] = useState<string[]>(inicial.contactos);
 
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -115,16 +111,6 @@ export default function ConfigurarAviso({
     return Object.keys(e).length === 0;
   }
 
-  function validarPasos() {
-    const e: Record<string, string> = {};
-    pasos.forEach((p, i) => {
-      if (!p.trim()) e[`paso-${i}`] = t.pasos.errorVacio;
-    });
-    if (pasosObligatorios && pasos.length === 0) e.pasos = t.pasos.errorNinguno;
-    setErrores(e);
-    return Object.keys(e).length === 0;
-  }
-
   function validarContactos() {
     const e: Record<string, string> = {};
     if (enAviso.length === 0) e.contactos = t.contactos.errorNinguno;
@@ -147,7 +133,7 @@ export default function ConfigurarAviso({
         dias,
         graciaMin: gracia,
         mensaje,
-        pasos: pasos.map((p) => p.trim()).filter(Boolean),
+        pasos: [],
         contactos: enAviso,
         fireAt: plazo.toISOString(),
       });
@@ -184,9 +170,9 @@ export default function ConfigurarAviso({
   const cabecera = (
     <>
       <BarraTitulo titulo={paso === "resumen" ? t.resumen.titulo : t.titulo} onVolver={guardando ? undefined : atras} />
-      {paso !== "resumen" && <Progreso actual={numero} total={3} />}
+      {paso !== "resumen" && <Progreso actual={numero} total={PASOS_VISIBLES} />}
       <h2 ref={titulo} tabIndex={-1} className="sr-only">
-        {paso === "resumen" ? t.resumen.titulo : `${t.titulo}, paso ${numero} de 3`}
+        {paso === "resumen" ? t.resumen.titulo : `${t.titulo}, paso ${numero} de ${PASOS_VISIBLES}`}
       </h2>
     </>
   );
@@ -196,7 +182,7 @@ export default function ConfigurarAviso({
     return (
       <Pantalla
         pie={
-          <button type="button" className={clases.principal} onClick={() => validarHora() && ir("pasos")}>
+          <button type="button" className={clases.principal} onClick={() => validarHora() && ir("contactos")}>
             {t.continuar}
           </button>
         }
@@ -350,76 +336,7 @@ export default function ConfigurarAviso({
     );
   }
 
-  // ---------- Paso 2 · Pasos a seguir ----------
-  if (paso === "pasos") {
-    return (
-      <Pantalla
-        pie={
-          <button type="button" className={clases.principal} onClick={() => validarPasos() && ir("contactos")}>
-            {t.continuar}
-          </button>
-        }
-      >
-        {cabecera}
-        <Tarjeta titulo={t.pasos.titulo} id="titulo-pasos">
-          <p className="text-text-muted">{t.pasos.texto}</p>
-          <ol className="space-y-3">
-            {pasos.map((p, i) => {
-              const err = errores[`paso-${i}`];
-              const etiqueta = rellenar(t.pasos.etiqueta, { n: i + 1 });
-              return (
-                <li key={i}>
-                  <div className="flex items-center gap-2">
-                    <Numero n={i + 1} />
-                    <label htmlFor={`paso-${i}`} className="sr-only">
-                      {etiqueta}
-                    </label>
-                    <input
-                      id={`paso-${i}`}
-                      value={p}
-                      maxLength={limites.pasoMax}
-                      placeholder={err ? t.pasos.errorVacio : undefined}
-                      onChange={(e) => setPasos((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
-                      aria-invalid={!!err}
-                      aria-describedby={err ? `paso-${i}-error` : undefined}
-                      className={clases.campo}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setPasos((prev) => prev.filter((_, j) => j !== i))}
-                      aria-label={rellenar(t.pasos.quitar, { n: i + 1 })}
-                      className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-border"
-                    >
-                      <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
-                      </svg>
-                    </button>
-                  </div>
-                  {err && (
-                    <p id={`paso-${i}-error`} className={`${clases.error} pl-11`}>
-                      {err}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-          {errores.pasos && (
-            <p role="alert" className={clases.error}>
-              {errores.pasos}
-            </p>
-          )}
-          {pasos.length < limites.pasosMax && (
-            <button type="button" className={clases.secundario} onClick={() => setPasos((prev) => [...prev, ""])}>
-              + {t.pasos.anadir}
-            </button>
-          )}
-        </Tarjeta>
-      </Pantalla>
-    );
-  }
-
-  // ---------- Paso 3 · Contactos del aviso ----------
+  // ---------- Paso 2 · Contactos del aviso (el orden son los pasos a seguir) ----------
   if (paso === "contactos") {
     const mover = (i: number, delta: number) =>
       setEnAviso((prev) => {
@@ -462,14 +379,17 @@ export default function ConfigurarAviso({
                     {t.contactos.quitar}
                   </button>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <BotonFlecha arriba disabled={i === 0} label={rellenar(t.contactos.subir, { nombres: c.name })} onClick={() => mover(i, -1)} />
-                  <BotonFlecha
-                    disabled={i === elegidos.length - 1}
-                    label={rellenar(t.contactos.bajar, { nombres: c.name })}
-                    onClick={() => mover(i, 1)}
-                  />
-                </div>
+                {/* PRD 12/11 (E5): las flechas solo existen con más de un contacto. La que no se puede usar se oculta, no se desactiva. */}
+                {elegidos.length > 1 && (
+                  <div className="flex flex-col gap-2">
+                    <BotonFlecha arriba oculto={i === 0} label={rellenar(t.contactos.subir, { nombres: c.name })} onClick={() => mover(i, -1)} />
+                    <BotonFlecha
+                      oculto={i === elegidos.length - 1}
+                      label={rellenar(t.contactos.bajar, { nombres: c.name })}
+                      onClick={() => mover(i, 1)}
+                    />
+                  </div>
+                )}
               </li>
             ))}
           </ol>
@@ -507,7 +427,6 @@ export default function ConfigurarAviso({
   // ---------- Resumen ----------
   const hayAceptado = elegidos.some((c) => c.accepted);
   const pendientes = elegidos.filter((c) => !c.accepted).map((c) => primerNombre(c.name));
-  const pasosLimpios = pasos.map((p) => p.trim()).filter(Boolean);
 
   return (
     <Pantalla
@@ -547,22 +466,30 @@ export default function ConfigurarAviso({
             <span aria-hidden="true">{duracion(gracia)}</span>
             <span className="sr-only">{duracionLarga(gracia)}</span>
           </Dato>
-          <Dato termino={t.resumen.contactos}>
-            <ol className="text-right">
-              {elegidos.map((c) => (
-                <li key={c.id}>{c.name}</li>
-              ))}
-            </ol>
-          </Dato>
-          <Dato termino={t.resumen.pasos}>
-            <ol className="text-right">
-              {pasosLimpios.map((p, i) => (
-                <li key={i}>{p}</li>
-              ))}
-            </ol>
-          </Dato>
           {mensaje.trim() && <Dato termino={t.resumen.mensaje}>{mensaje.trim()}</Dato>}
         </dl>
+      </Tarjeta>
+      {/* PRD 12/11 (E3): contactos y pasos siempre visibles, sin nada que abrir. Los pasos son los contactos en orden. */}
+      <Tarjeta titulo={t.resumen.contactos} id="resumen-contactos">
+        <ul className="divide-y divide-border/30">
+          {elegidos.map((c) => (
+            <li key={c.id} className="flex items-center justify-between gap-3 py-2">
+              <span className="font-medium">{c.name}</span>
+              <span className="text-sm text-text-muted">{c.accepted ? t.resumen.acepto : t.resumen.pendiente}</span>
+            </li>
+          ))}
+        </ul>
+      </Tarjeta>
+      <Tarjeta titulo={t.resumen.pasos} id="resumen-pasos">
+        <p className="text-text-muted">{t.resumen.pasosTexto}</p>
+        <ol className="space-y-3">
+          {elegidos.map((c, i) => (
+            <li key={c.id} className="flex items-center gap-3">
+              <Numero n={i + 1} />
+              <span>{rellenar(i === 0 ? t.resumen.pasoPrimero : t.resumen.pasoSiguiente, { nombre: c.name })}</span>
+            </li>
+          ))}
+        </ol>
       </Tarjeta>
     </Pantalla>
   );
@@ -604,14 +531,17 @@ function Segmentado({
   );
 }
 
-function BotonFlecha({ arriba, disabled, label, onClick }: { arriba?: boolean; disabled: boolean; label: string; onClick: () => void }) {
+// "oculto" deja el hueco (para que las dos flechas no bailen) pero no se ve ni se puede tocar ni enfocar.
+function BotonFlecha({ arriba, oculto, label, onClick }: { arriba?: boolean; oculto: boolean; label: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
+      disabled={oculto}
+      aria-hidden={oculto || undefined}
+      tabIndex={oculto ? -1 : undefined}
       aria-label={label}
-      className="inline-flex size-11 items-center justify-center rounded-lg border border-border disabled:opacity-30"
+      className={`inline-flex size-11 items-center justify-center rounded-lg border border-border ${oculto ? "invisible" : ""}`}
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
         <path d={arriba ? "m18 15-6-6-6 6" : "m6 9 6 6 6-6"} strokeLinecap="round" strokeLinejoin="round" />

@@ -45,7 +45,6 @@ export async function guardarAviso(d: DatosAviso): Promise<ResultadoAviso> {
     .map((p) => String(p).trim().slice(0, CONFIG_EMISOR.pasoMax))
     .filter(Boolean)
     .slice(0, CONFIG_EMISOR.pasosMax);
-  if (cfg.pasosObligatorios && pasos.length === 0) return falla(t.pasos.errorNinguno);
   const ids = [...new Set(d.contactos ?? [])].slice(0, CONFIG_EMISOR.contactosMax);
   if (ids.length === 0) return falla(t.contactos.errorNinguno);
 
