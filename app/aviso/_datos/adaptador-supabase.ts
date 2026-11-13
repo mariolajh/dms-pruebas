@@ -54,7 +54,7 @@ export function crearAdaptadorSupabase(supabase: SupabaseClient): AdaptadorExtra
         .delete()
         .eq("notice_id", noticeId)
         .eq("issuer_id", issuerId);
-      if (e2) throw new Error("No se pudieron actualizar los pasos");
+      if (e2) throw new Error(`No se pudieron actualizar los pasos (${e2.code}: ${e2.message})`);
 
       if (extras.pasos.length) {
         const { error: e3 } = await supabase.from("notice_steps").insert(
@@ -65,7 +65,7 @@ export function crearAdaptadorSupabase(supabase: SupabaseClient): AdaptadorExtra
             body,
           }))
         );
-        if (e3) throw new Error("No se pudieron guardar los pasos");
+        if (e3) throw new Error(`No se pudieron guardar los pasos (${e3.code}: ${e3.message})`);
       }
     },
 

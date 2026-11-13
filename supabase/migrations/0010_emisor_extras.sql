@@ -50,28 +50,36 @@ returns trigger
 language plpgsql
 security definer set search_path = ''
 as $$
-declare
-  v_recurrence text;
 begin
-  select n.recurrence into v_recurrence
-  from public.notices n
-  where n.id = new.notice_id and n.issuer_id = new.issuer_id;
-
-  if not found then
+  if not exists (
+    select 1 from public.notices n
+    where n.id = new.notice_id and n.issuer_id = new.issuer_id
+  ) then
     raise exception 'El aviso no pertenece a este usuario';
   end if;
-
-  -- Los días solo tienen sentido en avisos semanales.
-  if tg_table_name = 'notice_extras'
-     and new.weekdays is not null
-     and cardinality(new.weekdays) > 0
-     and v_recurrence <> 'weekly' then
-    raise exception 'Los días solo se guardan en avisos semanales';
-  end if;
-
   return new;
 end;
 $$;
+
+-- Los días solo tienen sentido en avisos semanales (solo para notice_extras).
+create or replace function public.check_extras_weekdays()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  if new.weekdays is not null and cardinality(new.weekdays) > 0 and
+     (select n.recurrence from public.notices n where n.id = new.notice_id) <> 'weekly' then
+    raise exception 'Los días solo se guardan en avisos semanales';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists notice_extras_weekdays on public.notice_extras;
+create trigger notice_extras_weekdays
+  before insert or update on public.notice_extras
+  for each row execute function public.check_extras_weekdays();
 
 create or replace function public.check_contact_owner()
 returns trigger

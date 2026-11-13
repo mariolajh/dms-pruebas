@@ -8,11 +8,10 @@ import type { Variant } from "@/lib/brand";
 //   - pasos a seguir (R6)
 //   - días elegidos ("Elegir días")
 //   - relación del contacto (Pareja, Papá…)
-// Activo: "fichero" (temporal) mientras la base de pruebas no tiene las tablas de la 0010.
-// Cuando existan, cambiar a "supabase".
+// Activo: "supabase" (tablas de la 0010 aplicadas en dms-pruebas). El adaptador "fichero" queda de respaldo.
 // No hay que tocar pantallas ni acciones.
 export const CONFIG_EMISOR = {
-  adaptadorExtras: "fichero" as "fichero" | "supabase",
+  adaptadorExtras: "supabase" as "fichero" | "supabase",
 
   // Ruta del fichero JSON del adaptador "fichero" (ignorado por git).
   // En Vercel el disco es de solo lectura: este adaptador solo sirve en local.
