@@ -2,6 +2,8 @@ import { getBrand } from "@/lib/brand";
 import { textosContactos } from "@/components/contactos/textos";
 import Dia from "@/components/contactos/Dia";
 import Reenviar from "@/components/contactos/Reenviar";
+import BarraNavegacion from "@/components/home/BarraNavegacion";
+import { textosInicio } from "@/components/home/textosInicio";
 import Toast from "@/components/emisor/Toast";
 import { BarraTitulo, EnlaceBoton, Numero, Pantalla, Progreso, Tarjeta } from "@/components/emisor/ui";
 import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
@@ -35,19 +37,23 @@ export default async function Contactos({
   const enAlta = !aviso;
   const puedeAgregar = contactos.length < CONFIG_EMISOR.contactosMax;
 
+  // En el alta: botones fijos abajo (si hay alguno). Fuera del alta: el menú de siempre, y "Agregar" dentro de la página.
+  const hayBotonesAlta = enAlta && (puedeAgregar || contactos.length > 0);
+  const pie = !enAlta ? (
+    <BarraNavegacion t={textosInicio(getBrand().variant).nav} actual="contactos" />
+  ) : hayBotonesAlta ? (
+    <>
+      {puedeAgregar && (
+        <EnlaceBoton href="/contactos/nuevo" tipo={contactos.length > 0 ? "secundario" : "principal"}>
+          {t.agregar}
+        </EnlaceBoton>
+      )}
+      {contactos.length > 0 && <EnlaceBoton href="/aviso">{t.continuar}</EnlaceBoton>}
+    </>
+  ) : undefined;
+
   return (
-    <Pantalla
-      pie={
-        <>
-          {puedeAgregar && (
-            <EnlaceBoton href="/contactos/nuevo" tipo={enAlta && contactos.length > 0 ? "secundario" : "principal"}>
-              {t.agregar}
-            </EnlaceBoton>
-          )}
-          {enAlta && contactos.length > 0 && <EnlaceBoton href="/aviso">{t.continuar}</EnlaceBoton>}
-        </>
-      }
-    >
+    <Pantalla pie={pie}>
       {enAlta ? <Progreso actual={2} total={3} siguiente={t.siguiente} /> : <BarraTitulo titulo={t.titulo} volverHref="/home" />}
 
       {enviada && <Toast texto={t.enviada} quitarParametro="enviada" />}
@@ -91,6 +97,7 @@ export default async function Contactos({
           ))}
         </ol>
       </Tarjeta>
+      {!enAlta && puedeAgregar && <EnlaceBoton href="/contactos/nuevo" tipo="secundario">{t.agregar}</EnlaceBoton>}
     </Pantalla>
   );
 }
