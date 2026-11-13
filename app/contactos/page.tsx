@@ -5,19 +5,24 @@ import Reenviar from "@/components/contactos/Reenviar";
 import BarraNavegacion from "@/components/home/BarraNavegacion";
 import { textosInicio } from "@/components/home/textosInicio";
 import Toast from "@/components/emisor/Toast";
-import { BarraTitulo, EnlaceBoton, Numero, Pantalla, Progreso, Tarjeta } from "@/components/emisor/ui";
+import Quitar from "@/components/contactos/Quitar";
+import { EnlaceBoton, Pantalla, Progreso, Tarjeta } from "@/components/emisor/ui";
 import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
 import type { DatosContacto } from "@/app/aviso/_datos/tipos";
 import { avisoActual, exigirSesion } from "@/app/aviso/_datos/sesion";
 
 // R-AV-E1 · Web Aviso · invitación enviada (y lista de contactos fuera del onboarding).
+export async function generateMetadata() {
+  return { title: textosContactos(getBrand().variant).lista.titulo };
+}
+
 export default async function Contactos({
   searchParams,
 }: {
-  searchParams: Promise<{ enviada?: string; fallo?: string }>;
+  searchParams: Promise<{ enviada?: string; fallo?: string; quitado?: string }>;
 }) {
-  const { enviada, fallo } = await searchParams;
+  const { enviada, fallo, quitado } = await searchParams;
   const s = await exigirSesion();
   const t = textosContactos(getBrand().variant).lista;
 
@@ -36,27 +41,30 @@ export default async function Contactos({
     .catch(() => ({}) as Record<string, DatosContacto>);
   const enAlta = !aviso;
   const puedeAgregar = contactos.length < CONFIG_EMISOR.contactosMax;
+  const hayAceptado = contactos.some((c) => c.status === "accepted");
+  // Para continuar el alta hace falta alguien a quien poder avisar (no vale solo quien rechazó).
+  const hayUtiles = contactos.some((c) => c.status === "pending" || c.status === "accepted");
 
-  // En el alta: botones fijos abajo (si hay alguno). Fuera del alta: el menú de siempre, y "Agregar" dentro de la página.
-  const hayBotonesAlta = enAlta && (puedeAgregar || contactos.length > 0);
-  const pie = !enAlta ? (
-    <BarraNavegacion t={textosInicio(getBrand().variant).nav} actual="contactos" />
-  ) : hayBotonesAlta ? (
-    <>
-      {puedeAgregar && (
-        <EnlaceBoton href="/contactos/nuevo" tipo={contactos.length > 0 ? "secundario" : "principal"}>
-          {t.agregar}
-        </EnlaceBoton>
-      )}
-      {contactos.length > 0 && <EnlaceBoton href="/aviso">{t.continuar}</EnlaceBoton>}
-    </>
-  ) : undefined;
+  // En el alta (flujo de pasos): botones fijos abajo, sin menú. Fuera del alta: menú principal
+  // y "Agregar" dentro de la página (norma de la biblioteca, Barra de navegación).
+  const pieAlta =
+    enAlta && (puedeAgregar || hayUtiles) ? (
+      <>
+        {puedeAgregar && (
+          <EnlaceBoton href="/contactos/nuevo" tipo={hayUtiles ? "secundario" : "principal"}>
+            {t.agregar}
+          </EnlaceBoton>
+        )}
+        {hayUtiles && <EnlaceBoton href="/aviso">{t.continuar}</EnlaceBoton>}
+      </>
+    ) : undefined;
 
   return (
-    <Pantalla pie={pie}>
-      {enAlta ? <Progreso actual={2} total={3} siguiente={t.siguiente} /> : <BarraTitulo titulo={t.titulo} volverHref="/home" />}
+    <Pantalla pie={pieAlta} nav={enAlta ? undefined : <BarraNavegacion t={textosInicio(getBrand().variant).nav} actual="contactos" />}>
+      {enAlta ? <Progreso actual={2} total={3} siguiente={t.siguiente} /> : <h1 className="pt-2 text-2xl font-semibold">{t.titulo}</h1>}
 
       {enviada && <Toast texto={t.enviada} quitarParametro="enviada" />}
+      {quitado && <Toast texto={t.quitado} quitarParametro="quitado" />}
       {fallo && (
         <p role="alert" className="rounded-lg border-2 border-danger bg-surface p-3 text-sm font-medium">
           {t.falloCorreo}
@@ -64,26 +72,24 @@ export default async function Contactos({
       )}
 
       <Tarjeta titulo={enAlta ? t.titulo : undefined} id="tus-contactos">
-        <p className="text-text-muted">{t.texto}</p>
+        <p className="text-text-muted">{hayAceptado ? t.textoAceptado : t.texto}</p>
         {contactos.length === 0 && <p>{t.vacio}</p>}
-        <ol className="space-y-3">
-          {contactos.map((c, i) => (
-            <li key={c.id} className="flex gap-3 rounded-lg border border-border/50 p-3">
-              <Numero n={i + 1} />
-              <div className="min-w-0 flex-1 space-y-0.5">
+        {/* Sin números: el orden de aviso se decide en "Configura tu aviso", no aquí. */}
+        <ul className="space-y-3">
+          {contactos.map((c) => {
+            const enviadaEn = extras[c.id]?.invitacionEnviadaEn;
+            return (
+              <li key={c.id} className="space-y-1 rounded-lg border border-border/50 p-3">
                 <p className="font-semibold">{c.name}</p>
                 {extras[c.id]?.relacion && <p className="text-sm text-text-muted">{extras[c.id]?.relacion}</p>}
-                {c.status === "pending" && (
+                {/* Un solo estado por contacto: sin enviar, esperando, aceptó o rechazó. */}
+                {c.status === "pending" && !enviadaEn && <p className="text-sm font-medium text-danger">{t.noEnviada}</p>}
+                {c.status === "pending" && enviadaEn && (
                   <>
-                    <p className="text-sm text-text-muted">
-                      {extras[c.id]?.invitacionEnviadaEn ? (
-                        <Dia iso={extras[c.id]!.invitacionEnviadaEn!} prefijo={t.enviadaEl} />
-                      ) : (
-                        t.noEnviada
-                      )}
-                    </p>
                     <p className="text-sm font-medium">{t.pendiente}</p>
-                    <Reenviar contactId={c.id} nombre={c.name} t={t} />
+                    <p className="text-sm text-text-muted">
+                      <Dia iso={enviadaEn} prefijo={t.enviadaEl} />
+                    </p>
                   </>
                 )}
                 {c.status === "accepted" && (
@@ -92,12 +98,20 @@ export default async function Contactos({
                   </p>
                 )}
                 {c.status === "rejected" && <p className="text-sm font-medium">{t.rechazo}</p>}
-              </div>
-            </li>
-          ))}
-        </ol>
+                <div className="flex flex-wrap items-start gap-x-6">
+                  {c.status === "pending" && <Reenviar contactId={c.id} nombre={c.name} sinEnviar={!enviadaEn} t={t} />}
+                  <Quitar contactId={c.id} nombre={c.name} t={t} />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </Tarjeta>
-      {!enAlta && puedeAgregar && <EnlaceBoton href="/contactos/nuevo" tipo="secundario">{t.agregar}</EnlaceBoton>}
+      {!enAlta && puedeAgregar && (
+        <EnlaceBoton href="/contactos/nuevo" tipo="secundario">
+          {t.agregar}
+        </EnlaceBoton>
+      )}
     </Pantalla>
   );
 }

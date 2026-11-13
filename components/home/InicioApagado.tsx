@@ -13,27 +13,29 @@ export default function InicioApagado({
   app,
   nombre,
   pendientes,
+  rechazados,
   hayAceptado,
 }: {
   t: TextosInicio;
   app: string;
   nombre: string;
   pendientes: string[];
+  rechazados: string[];
   hayAceptado: boolean;
 }) {
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-surface-muted">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
       <main className="flex-1 space-y-4 p-4">
         <p className="pt-2 text-lg font-semibold">{app}</p>
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>
-        <Tarjeta
-          accion={
+        <Tarjeta>
+          {/* Orden de lectura: primero el estado y el título, después "Editar". */}
+          <div className="flex items-center justify-between gap-2">
+            <Badge>{hayAceptado ? t.apagado : t.esperando}</Badge>
             <Link href="/aviso" className={clases.enlace} aria-label={t.editarAria}>
               {t.editar}
             </Link>
-          }
-        >
-          <Badge>{hayAceptado ? t.apagado : t.esperando}</Badge>
+          </div>
           <h2 className="text-lg font-semibold">{t.tuAviso}</h2>
           {!hayAceptado && (
             <p className="text-text-muted">
@@ -41,6 +43,9 @@ export default function InicioApagado({
               {pendientes.length > 0 &&
                 rellenar(pendientes.length === 1 ? t.aunNoUno : t.aunNoVarios, { nombres: listaNombres(pendientes) })}
             </p>
+          )}
+          {rechazados.length > 0 && (
+            <p className="font-medium">{rellenar(rechazados.length === 1 ? t.rechazoUno : t.rechazoVarios, { nombres: listaNombres(rechazados) })}</p>
           )}
           <EnlaceBoton href="/contactos" tipo="secundario">
             {t.verContactos}

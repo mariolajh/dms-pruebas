@@ -5,7 +5,7 @@ import type { Variant } from "@/lib/brand";
 // ADAPTADOR DE DATOS EXTRA
 // El diseño pide cuatro datos extra. Desde la migración 0010 ya tienen tabla:
 //   - mensaje del aviso (hasta 300 caracteres)
-//   - pasos a seguir (R6)
+//   - pasos a seguir (R6): desde el PRD del 12/11 son los contactos en orden; ya no se escriben
 //   - días elegidos ("Elegir días")
 //   - relación del contacto (Pareja, Papá…)
 // Activo: "supabase" (tablas de la 0010 aplicadas en dms-pruebas). El adaptador "fichero" queda de respaldo.
@@ -25,24 +25,19 @@ export const CONFIG_EMISOR = {
   },
 
   mensajeMax: 300,
-  pasoMax: 200,
-  pasosMax: 10,
   contactosMax: 5,
 
   // Valores que cambian por versión (O1).
   porVersion: {
     cerca: {
       graciaPorDefecto: 30,
-      // Pasos a seguir obligatorios (decidido con Mariola el 10/11; el PRD los hacía opcionales).
-      pasosObligatorios: false,
       horaPorDefecto: "20:00",
     },
     montana: {
       graciaPorDefecto: 120,
-      pasosObligatorios: false,
       horaPorDefecto: "20:00",
     },
-  } satisfies Record<Variant, { graciaPorDefecto: number; pasosObligatorios: boolean; horaPorDefecto: string }>,
+  } satisfies Record<Variant, { graciaPorDefecto: number; horaPorDefecto: string }>,
 };
 
 export function configVersion(variant: Variant) {

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { invitarContacto, type EstadoInvitar } from "@/app/contactos/actions";
-import { Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
+import { BarraTitulo, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import type { TextosContactos } from "./textos";
 
 // R-AV-E1 · Web · Aviso · establecer contacto
@@ -37,11 +37,15 @@ export default function FormContacto({
           </>
         }
       >
-        {enAlta && <Progreso actual={2} total={3} siguiente={t.siguiente} />}
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold">{t.titulo}</h1>
-          <p className="text-text-muted">{t.texto}</p>
-        </div>
+        {enAlta ? (
+          <>
+            <Progreso actual={2} total={3} siguiente={t.siguiente} />
+            <h1 className="text-xl font-semibold">{t.titulo}</h1>
+          </>
+        ) : (
+          <BarraTitulo titulo={t.titulo} volverHref={cancelarHref} />
+        )}
+        <p className="text-text-muted">{t.texto}</p>
         <Tarjeta titulo={esPrimero ? t.tarjetaPrimero : t.tarjetaOtro} id="tarjeta-contacto">
           <div>
             <label htmlFor="name" className={clases.etiqueta}>

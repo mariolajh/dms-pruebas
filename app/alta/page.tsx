@@ -1,11 +1,18 @@
 import { getBrand } from "@/lib/brand";
 import { textosAlta } from "@/components/alta/textos";
 import { EnlaceBoton, Numero, Pantalla, Tarjeta } from "@/components/emisor/ui";
-import { exigirSesion } from "@/app/aviso/_datos/sesion";
+import { redirect } from "next/navigation";
+import { avisoActual, exigirSesion } from "@/app/aviso/_datos/sesion";
 
 // R-AV-E1 · Web · Onboarding · comienzo
+export async function generateMetadata() {
+  return { title: textosAlta(getBrand().variant).comienzo.empezar };
+}
+
 export default async function AltaComienzo() {
-  await exigirSesion();
+  const s = await exigirSesion();
+  // La bienvenida es solo para quien todavía no tiene aviso.
+  if (await avisoActual(s)) redirect("/home");
   const brand = getBrand();
   const t = textosAlta(brand.variant).comienzo;
 

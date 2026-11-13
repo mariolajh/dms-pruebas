@@ -18,14 +18,16 @@ export const clases = {
   error: "mt-1 text-sm font-medium text-danger",
 };
 
-export function Pantalla({ children, pie }: { children: React.ReactNode; pie?: React.ReactNode }) {
+// pie = botones fijos (flujos de pasos). nav = menú principal. Nunca los dos a la vez.
+export function Pantalla({ children, pie, nav }: { children: React.ReactNode; pie?: React.ReactNode; nav?: React.ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-surface-muted">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
       <main className="flex-1 space-y-4 p-4 pb-8">{children}</main>
       {pie && (
         // Zona de acción fija: deja el foco visible al hacer scroll (WCAG 2.4.12).
         <div className="sticky bottom-0 space-y-2 border-t border-border/40 bg-surface p-4">{pie}</div>
       )}
+      {nav}
     </div>
   );
 }

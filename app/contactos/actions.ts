@@ -9,6 +9,7 @@ import { textosContactos } from "@/components/contactos/textos";
 import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
 import { exigirSesion, type Sesion } from "@/app/aviso/_datos/sesion";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
+import { sacarDeAvisos } from "./_baja";
 
 // E5 · Invitar contactos. El contacto se guarda como `pending` con el hash del token;
 // el token en claro solo viaja en el enlace del correo.
@@ -132,4 +133,24 @@ export async function reenviarInvitacion(_prev: EstadoReenviar, form: FormData):
   await anotarEnvio(s, c.id, enviado);
   revalidatePath("/contactos");
   return enviado ? { ok: true } : { error: t.falloReenvio };
+}
+
+export type EstadoQuitar = { error?: string };
+
+// E5 · Quitar un contacto. Libera su sitio (máximo 5) y lo saca del aviso.
+export async function quitarContacto(_prev: EstadoQuitar, form: FormData): Promise<EstadoQuitar> {
+  const s = await exigirSesion();
+  const t = textosContactos(getBrand().variant).lista;
+  const id = String(form.get("contact_id") ?? "");
+  const { data: c } = await s.supabase.from("contacts").select("id").eq("id", id).eq("issuer_id", s.user.id).neq("status", "removed").maybeSingle();
+  if (!c) return { error: t.falloQuitar };
+  const { error } = await s.supabase
+    .from("contacts")
+    .update({ status: "removed", removed_at: new Date().toISOString(), invite_token_hash: null })
+    .eq("id", id);
+  if (error) return { error: t.falloQuitar };
+  await sacarDeAvisos(s.supabase, s.user.id, id);
+  revalidatePath("/contactos");
+  revalidatePath("/home");
+  redirect("/contactos?quitado=1");
 }

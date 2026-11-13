@@ -14,6 +14,10 @@ import { primerNombre } from "@/app/aviso/_datos/formato";
 
 // Sin aviso o con el aviso apagado: pantallas del flujo de quien emite (onboarding / Inicio apagado).
 // Encendido o en alerta: sigue el placeholder del núcleo con E6, hasta construir las portadas 02 a 05.
+export async function generateMetadata() {
+  return { title: textosInicio(getBrand().variant).titulo };
+}
+
 export default async function HomePage({
   searchParams,
 }: {
@@ -55,6 +59,7 @@ export default async function HomePage({
         nombre={primerNombre(profile?.full_name ?? "")}
         hayAceptado={contactos.some((c) => c.status === "accepted")}
         pendientes={contactos.filter((c) => c.status === "pending").map((c) => primerNombre(c.name))}
+        rechazados={contactos.filter((c) => c.status === "rejected").map((c) => primerNombre(c.name))}
       />
     );
   }

@@ -17,6 +17,7 @@ const COMUNES = {
   notificaciones: {
     siguiente: "Siguiente: Contactos",
     titulo: "Activa las notificaciones",
+    tituloCorto: "Notificaciones",
     texto: "Así te recordamos confirmar a tiempo y te enteras si hay una alerta.",
     activar: "Activar notificaciones",
     activando: "Activando…",

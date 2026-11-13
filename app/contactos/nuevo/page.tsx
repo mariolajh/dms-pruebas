@@ -3,6 +3,10 @@ import { textosContactos } from "@/components/contactos/textos";
 import FormContacto from "@/components/contactos/FormContacto";
 import { avisoActual, exigirSesion } from "@/app/aviso/_datos/sesion";
 
+export async function generateMetadata() {
+  return { title: textosContactos(getBrand().variant).nuevo.titulo };
+}
+
 export default async function ContactoNuevo() {
   const s = await exigirSesion();
   const t = textosContactos(getBrand().variant).nuevo;

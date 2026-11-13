@@ -14,6 +14,8 @@ const COMUNES = {
   ayudaMantener: "Mantén presionado el botón 2 segundos",
   ayudaSuelta: "Si lo sueltas antes, no se cancela nada.",
   sigue: "Sigue presionando…",
+  // Con teclado o lector de pantalla no se puede "mantener": se pulsa y se confirma.
+  ayudaAsistida: "Con teclado o lector de pantalla: pulsa el botón y confirma.",
   confirmarPregunta: "¿Confirmas que estás bien y quieres cancelar la alerta?",
   confirmarSi: "Sí, cancelar alerta",
   volver: "Volver",

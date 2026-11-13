@@ -43,12 +43,15 @@ export default function ConfigurarAviso({
   opciones,
   limites,
   volverHref,
+  enAlta,
 }: {
   t: TextosAviso;
   inicial: Inicial;
   opciones: ContactoOpcion[];
   limites: Limites;
   volverHref: string;
+  // En el alta este asistente entero es el "Paso 3 de 3". Al editar, cuenta sus dos pantallas.
+  enAlta: boolean;
 }) {
   const router = useRouter();
   const [paso, setPaso] = useState<Paso>("hora");
@@ -58,7 +61,11 @@ export default function ConfigurarAviso({
   const [dias, setDias] = useState<number[]>(inicial.dias);
   const esOtro = !limites.graciaOpciones.includes(inicial.graciaMin);
   const [graciaOtro, setGraciaOtro] = useState(esOtro);
-  const [gracia, setGracia] = useState(inicial.graciaMin);
+  const [gracia, setGraciaLibre] = useState(inicial.graciaMin);
+  // Nunca fuera de 15 min – 24 h: el selector no deja elegir un valor que luego dé error.
+  const setGracia = (min: number) => setGraciaLibre(Math.min(limites.graciaMax, Math.max(limites.graciaMin, min)));
+  // Tras mover un contacto, el foco sigue a ese contacto (la flecha pulsada puede desaparecer).
+  const [focoTras, setFocoTras] = useState<{ id: string; arriba: boolean } | null>(null);
   const [mensaje, setMensaje] = useState(inicial.mensaje);
   const [enAviso, setEnAviso] = useState<string[]>(inicial.contactos);
 
@@ -85,6 +92,13 @@ export default function ConfigurarAviso({
     window.scrollTo(0, 0);
     titulo.current?.focus();
   }, [paso]);
+
+  useEffect(() => {
+    if (!focoTras) return;
+    const boton = (dir: string) => document.querySelector<HTMLButtonElement>(`[data-flecha="${focoTras.id}-${dir}"]:not(:disabled)`);
+    (boton(focoTras.arriba ? "sube" : "baja") ?? boton(focoTras.arriba ? "baja" : "sube"))?.focus();
+    setFocoTras(null);
+  }, [focoTras]);
 
   const porId = new Map(opciones.map((c) => [c.id, c]));
   const elegidos = enAviso.map((id) => porId.get(id)).filter((c): c is ContactoOpcion => !!c);
@@ -133,7 +147,6 @@ export default function ConfigurarAviso({
         dias,
         graciaMin: gracia,
         mensaje,
-        pasos: [],
         contactos: enAviso,
         fireAt: plazo.toISOString(),
       });
@@ -166,13 +179,14 @@ export default function ConfigurarAviso({
         ? rellenar(t.contactos.ordenUno, { primero: nombresElegidos[0] })
         : rellenar(t.contactos.ordenVarios, { primero: nombresElegidos[0], resto: listaNombres(nombresElegidos.slice(1)) });
 
-  const numero = ORDEN.indexOf(paso) + 1;
+  const numero = enAlta ? 3 : ORDEN.indexOf(paso) + 1;
+  const total = enAlta ? 3 : PASOS_VISIBLES;
   const cabecera = (
     <>
       <BarraTitulo titulo={paso === "resumen" ? t.resumen.titulo : t.titulo} onVolver={guardando ? undefined : atras} />
-      {paso !== "resumen" && <Progreso actual={numero} total={PASOS_VISIBLES} />}
+      {paso !== "resumen" && <Progreso actual={numero} total={total} />}
       <h2 ref={titulo} tabIndex={-1} className="sr-only">
-        {paso === "resumen" ? t.resumen.titulo : `${t.titulo}, paso ${numero} de ${PASOS_VISIBLES}`}
+        {paso === "resumen" ? t.resumen.titulo : `${t.titulo}, paso ${numero} de ${total}`}
       </h2>
     </>
   );
@@ -279,7 +293,7 @@ export default function ConfigurarAviso({
                     id="gracia-h"
                     className={clases.campo}
                     value={Math.floor(gracia / 60)}
-                    onChange={(e) => setGracia(Math.min(Number(e.target.value) * 60 + (gracia % 60), limites.graciaMax))}
+                    onChange={(e) => setGracia(Number(e.target.value) * 60 + (gracia % 60))}
                   >
                     {Array.from({ length: limites.graciaMax / 60 + 1 }, (_, h) => (
                       <option key={h} value={h}>
@@ -317,20 +331,31 @@ export default function ConfigurarAviso({
 
         <Tarjeta>
           <label htmlFor="mensaje" className={clases.etiqueta}>
-            {t.hora.mensaje}
+            {t.hora.mensaje} <span className="font-normal text-text-muted">{t.hora.opcional}</span>
           </label>
+          <p id="mensaje-ayuda" className="text-text-muted">
+            {t.hora.mensajeAyuda}
+          </p>
           <textarea
             id="mensaje"
             rows={3}
             maxLength={limites.mensajeMax}
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
-            aria-describedby="mensaje-contador"
+            aria-describedby="mensaje-ayuda mensaje-ejemplo"
             className={`${clases.campo} resize-none`}
           />
-          <p id="mensaje-contador" className="text-right text-sm text-text-muted">
-            {mensaje.length} / {limites.mensajeMax}
-          </p>
+          <div className="flex items-start justify-between gap-3 text-sm text-text-muted">
+            <p id="mensaje-ejemplo">{t.hora.mensajeEjemplo}</p>
+            <p className="shrink-0">
+              <span aria-hidden="true">
+                {mensaje.length} / {limites.mensajeMax}
+              </span>
+              <span className="sr-only">
+                {mensaje.length} de {limites.mensajeMax} caracteres
+              </span>
+            </p>
+          </div>
         </Tarjeta>
       </Pantalla>
     );
@@ -338,12 +363,14 @@ export default function ConfigurarAviso({
 
   // ---------- Paso 2 · Contactos del aviso (el orden son los pasos a seguir) ----------
   if (paso === "contactos") {
-    const mover = (i: number, delta: number) =>
+    const mover = (i: number, delta: number) => {
+      setFocoTras({ id: enAviso[i], arriba: delta < 0 });
       setEnAviso((prev) => {
         const n = [...prev];
         [n[i], n[i + delta]] = [n[i + delta], n[i]];
         return n;
       });
+    };
     return (
       <Pantalla
         pie={
@@ -355,6 +382,7 @@ export default function ConfigurarAviso({
         {cabecera}
         <Tarjeta titulo={t.contactos.titulo} id="titulo-contactos">
           {textoOrden && <p className="text-text-muted">{textoOrden}</p>}
+          {elegidos.some((c) => !c.accepted) && <p className="text-sm text-text-muted">{t.contactos.soloAceptados}</p>}
           {opciones.length === 0 && (
             <>
               <p>{t.contactos.sinContactos}</p>
@@ -370,6 +398,7 @@ export default function ConfigurarAviso({
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{c.name}</p>
                   {c.relacion && <p className="text-sm text-text-muted">{c.relacion}</p>}
+                  {!c.accepted && <p className="text-sm font-medium">{t.contactos.pendiente}</p>}
                   <button
                     type="button"
                     className={clases.enlace}
@@ -382,8 +411,9 @@ export default function ConfigurarAviso({
                 {/* PRD 12/11 (E5): las flechas solo existen con más de un contacto. La que no se puede usar se oculta, no se desactiva. */}
                 {elegidos.length > 1 && (
                   <div className="flex flex-col gap-2">
-                    <BotonFlecha arriba oculto={i === 0} label={rellenar(t.contactos.subir, { nombres: c.name })} onClick={() => mover(i, -1)} />
+                    <BotonFlecha arriba dato={`${c.id}-sube`} oculto={i === 0} label={rellenar(t.contactos.subir, { nombres: c.name })} onClick={() => mover(i, -1)} />
                     <BotonFlecha
+                      dato={`${c.id}-baja`}
                       oculto={i === elegidos.length - 1}
                       label={rellenar(t.contactos.bajar, { nombres: c.name })}
                       onClick={() => mover(i, 1)}
@@ -469,24 +499,19 @@ export default function ConfigurarAviso({
           {mensaje.trim() && <Dato termino={t.resumen.mensaje}>{mensaje.trim()}</Dato>}
         </dl>
       </Tarjeta>
-      {/* PRD 12/11 (E3): contactos y pasos siempre visibles, sin nada que abrir. Los pasos son los contactos en orden. */}
-      <Tarjeta titulo={t.resumen.contactos} id="resumen-contactos">
-        <ul className="divide-y divide-border/30">
-          {elegidos.map((c) => (
-            <li key={c.id} className="flex items-center justify-between gap-3 py-2">
-              <span className="font-medium">{c.name}</span>
-              <span className="text-sm text-text-muted">{c.accepted ? t.resumen.acepto : t.resumen.pendiente}</span>
-            </li>
-          ))}
-        </ul>
-      </Tarjeta>
+      {/* PRD 12/11 (E3): contactos y pasos siempre visibles, sin nada que abrir. Los pasos son los
+          contactos en orden: una sola lista numerada, cada contacto con su estado. Quien no aceptó
+          no recibe el aviso, y se dice aquí para no prometer una alerta que no llegaría. */}
       <Tarjeta titulo={t.resumen.pasos} id="resumen-pasos">
         <p className="text-text-muted">{t.resumen.pasosTexto}</p>
         <ol className="space-y-3">
           {elegidos.map((c, i) => (
-            <li key={c.id} className="flex items-center gap-3">
+            <li key={c.id} className="flex items-start gap-3">
               <Numero n={i + 1} />
-              <span>{rellenar(i === 0 ? t.resumen.pasoPrimero : t.resumen.pasoSiguiente, { nombre: c.name })}</span>
+              <div className="min-w-0">
+                <p className="font-medium">{rellenar(i === 0 ? t.resumen.pasoPrimero : t.resumen.pasoSiguiente, { nombre: c.name })}</p>
+                <p className={`text-sm ${c.accepted ? "text-text-muted" : "font-medium"}`}>{c.accepted ? t.resumen.acepto : t.resumen.pendiente}</p>
+              </div>
             </li>
           ))}
         </ol>
@@ -532,11 +557,12 @@ function Segmentado({
 }
 
 // "oculto" deja el hueco (para que las dos flechas no bailen) pero no se ve ni se puede tocar ni enfocar.
-function BotonFlecha({ arriba, oculto, label, onClick }: { arriba?: boolean; oculto: boolean; label: string; onClick: () => void }) {
+function BotonFlecha({ arriba, oculto, label, dato, onClick }: { arriba?: boolean; oculto: boolean; label: string; dato: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      data-flecha={dato}
       disabled={oculto}
       aria-hidden={oculto || undefined}
       tabIndex={oculto ? -1 : undefined}

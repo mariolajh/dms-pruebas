@@ -7,7 +7,11 @@ import { adaptadorExtras } from "./_datos/adaptador";
 import { avisoActual, exigirSesion } from "./_datos/sesion";
 import type { DatosContacto, Frecuencia } from "./_datos/tipos";
 
-// E · Configurar aviso (Hora, Pasos, Contactos) + Resumen + Guardando.
+// E · Configurar aviso (Hora, Contactos) + Resumen + Guardando.
+export async function generateMetadata() {
+  return { title: textosAviso(getBrand().variant).titulo };
+}
+
 export default async function Aviso() {
   const s = await exigirSesion();
   const brand = getBrand();
@@ -70,6 +74,7 @@ export default async function Aviso() {
         mensajeMax: CONFIG_EMISOR.mensajeMax,
       }}
       volverHref={aviso ? "/home" : "/contactos"}
+      enAlta={!aviso}
     />
   );
 }

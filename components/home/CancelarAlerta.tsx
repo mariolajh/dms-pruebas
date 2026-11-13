@@ -38,6 +38,7 @@ export default function CancelarAlerta({ textos }: { textos: TextosHome }) {
         help={textos.ayudaMantener}
         helpSmall={textos.ayudaSuelta}
         holdingLabel={textos.sigue}
+        helpAssisted={textos.ayudaAsistida}
         confirmQuestion={textos.confirmarPregunta}
         confirmYes={textos.confirmarSi}
         confirmBack={textos.volver}

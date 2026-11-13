@@ -10,6 +10,7 @@ export default function HoldButton({
   help,
   helpSmall,
   holdingLabel,
+  helpAssisted,
   confirmQuestion,
   confirmYes,
   confirmBack,
@@ -22,6 +23,7 @@ export default function HoldButton({
   help: string;
   helpSmall: string;
   holdingLabel: string;
+  helpAssisted: string;
   confirmQuestion: string;
   confirmYes: string;
   confirmBack: string;
@@ -114,14 +116,18 @@ export default function HoldButton({
     <div className="space-y-4">
       {/* PRD 12/11 (E6): la instrucción va ARRIBA y en grande, antes del botón. */}
       <div id="hold-help" className="flex items-start gap-3 rounded-xl bg-surface-muted p-4">
+        {/* Icono de "pulsar y mantener": un punto con dos ondas. */}
         <span aria-hidden="true" className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-primary text-brand-on-primary">
-          <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.6-2.1L4 15.8a1.6 1.6 0 0 1 2.4-2L9 16" />
+          <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="3" fill="currentColor" />
+            <circle cx="12" cy="12" r="6.5" />
+            <circle cx="12" cy="12" r="10" opacity="0.5" />
           </svg>
         </span>
         <div>
           <p className="text-xl font-bold leading-snug">{help}</p>
           <p className="mt-1 text-text-muted">{helpSmall}</p>
+          <p className="sr-only">{helpAssisted}</p>
         </div>
       </div>
       <button
@@ -141,8 +147,11 @@ export default function HoldButton({
           className="absolute inset-y-0 left-0 bg-brand-primary/25"
           style={{ width: `${Math.round(progress * 100)}%` }}
         />
-        <span className="relative">{busy ? busyLabel : sujetando ? holdingLabel : label}</span>
+        <span className="relative">{busy ? busyLabel : label}</span>
       </button>
+      <p aria-hidden="true" className={`text-center font-medium ${sujetando ? "" : "invisible"}`}>
+        {holdingLabel}
+      </p>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getBrand } from "@/lib/brand";
 import { textosAviso } from "@/components/aviso/textos";
-import { CONFIG_EMISOR, configVersion } from "./_datos/config";
+import { CONFIG_EMISOR } from "./_datos/config";
 import { adaptadorExtras } from "./_datos/adaptador";
 import { exigirSesion } from "./_datos/sesion";
 import type { Frecuencia } from "./_datos/tipos";
@@ -17,7 +17,6 @@ export type DatosAviso = {
   dias: number[];
   graciaMin: number;
   mensaje: string;
-  pasos: string[];
   contactos: string[]; // ids en orden de aviso
   fireAt: string; // próximo plazo, calculado en el navegador con su zona horaria
 };
@@ -28,7 +27,6 @@ export async function guardarAviso(d: DatosAviso): Promise<ResultadoAviso> {
   const s = await exigirSesion();
   const brand = getBrand();
   const t = textosAviso(brand.variant);
-  const cfg = configVersion(brand.variant);
   const falla = (error = t.resumen.errorGuardar): ResultadoAviso => ({ ok: false, error });
 
   // Validación (lo mismo que en la pantalla; el servidor no se fía del navegador).
@@ -41,10 +39,6 @@ export async function guardarAviso(d: DatosAviso): Promise<ResultadoAviso> {
   const margen = fire.getTime() - Date.now();
   if (Number.isNaN(fire.getTime()) || margen < 30_000 || margen > 8 * 86_400_000) return falla(t.hora.errorPasada);
   const mensaje = String(d.mensaje ?? "").trim().slice(0, CONFIG_EMISOR.mensajeMax);
-  const pasos = (d.pasos ?? [])
-    .map((p) => String(p).trim().slice(0, CONFIG_EMISOR.pasoMax))
-    .filter(Boolean)
-    .slice(0, CONFIG_EMISOR.pasosMax);
   const ids = [...new Set(d.contactos ?? [])].slice(0, CONFIG_EMISOR.contactosMax);
   if (ids.length === 0) return falla(t.contactos.errorNinguno);
 
@@ -102,7 +96,9 @@ export async function guardarAviso(d: DatosAviso): Promise<ResultadoAviso> {
   try {
     await adaptadorExtras(s.supabase).guardarAviso(s.user.id, noticeId, {
       mensaje,
-      pasos,
+      // PRD 12/11: los pasos son los contactos en orden. Se guarda vacío para borrar pasos antiguos
+      // escritos a mano, que quien recibe la alerta no debe ver.
+      pasos: [],
       dias: d.frecuencia === "weekly" ? dias : [],
     });
   } catch (e) {

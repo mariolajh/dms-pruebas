@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Badge, EnlaceBoton, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
+import { Badge, BarraTitulo, EnlaceBoton, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import type { TextosAlta } from "./textos";
 
 // Paso 1 del onboarding. Usa el mismo endpoint que el PushButton del núcleo (/api/push/subscribe).
@@ -9,15 +9,15 @@ import type { TextosAlta } from "./textos";
 
 type Fase = "inicio" | "activando" | "activas" | "no-activo";
 
-const SIGUIENTE = "/contactos/nuevo";
-
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
-export default function ActivarNotificaciones({ t }: { t: TextosAlta["notificaciones"] }) {
+// enAlta: paso 1 del onboarding. Si no, se llega desde Ajustes y se vuelve allí.
+export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["notificaciones"]; enAlta: boolean }) {
+  const SIGUIENTE = enAlta ? "/contactos/nuevo" : "/ajustes";
   const [fase, setFase] = useState<Fase>("inicio");
   const [detalle, setDetalle] = useState<string | null>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -61,7 +61,9 @@ export default function ActivarNotificaciones({ t }: { t: TextosAlta["notificaci
     }
   }
 
-  const cabecera = <Progreso actual={1} total={3} siguiente={t.siguiente} />;
+  const cabecera = enAlta ? <Progreso actual={1} total={3} siguiente={t.siguiente} /> : <BarraTitulo titulo={t.tituloCorto} volverHref="/ajustes" />;
+  // Con barra de título ya hay un h1: el título de la tarjeta baja a h2.
+  const Titulo = enAlta ? "h1" : "h2";
 
   if (fase === "activas") {
     return (
@@ -69,9 +71,9 @@ export default function ActivarNotificaciones({ t }: { t: TextosAlta["notificaci
         {cabecera}
         <Tarjeta>
           <Badge>{t.activasBadge}</Badge>
-          <h1 ref={titulo} tabIndex={-1} className="text-xl font-semibold">
+          <Titulo ref={titulo} tabIndex={-1} className="text-xl font-semibold">
             {t.activasTitulo}
-          </h1>
+          </Titulo>
           <p className="text-text-muted">{t.activasTexto}</p>
         </Tarjeta>
       </Pantalla>
@@ -94,9 +96,9 @@ export default function ActivarNotificaciones({ t }: { t: TextosAlta["notificaci
       >
         {cabecera}
         <Tarjeta>
-          <h1 ref={titulo} tabIndex={-1} className="text-xl font-semibold">
+          <Titulo ref={titulo} tabIndex={-1} className="text-xl font-semibold">
             {t.noTitulo}
-          </h1>
+          </Titulo>
           <p>{t.noTexto}</p>
           {detalle && (
             <p role="status" className="text-sm font-medium">
@@ -129,7 +131,7 @@ export default function ActivarNotificaciones({ t }: { t: TextosAlta["notificaci
     >
       {cabecera}
       <Tarjeta>
-        <h1 className="text-xl font-semibold">{t.titulo}</h1>
+        <Titulo className="text-xl font-semibold">{t.titulo}</Titulo>
         <p className="text-text-muted">{t.texto}</p>
       </Tarjeta>
     </Pantalla>
