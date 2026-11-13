@@ -116,15 +116,20 @@ export async function reenviarInvitacion(_prev: EstadoReenviar, form: FormData):
     .eq("id", id)
     .eq("issuer_id", s.user.id)
     .maybeSingle();
-  if (!c || c.status !== "pending") return { error: t.falloCorreo };
+  if (!c) return { error: t.falloReenvio };
+  if (c.status !== "pending") {
+    // La página estaba desactualizada: la persona ya contestó. Se refresca la lista.
+    revalidatePath("/contactos");
+    return { error: t.yaRespondio };
+  }
 
   // Un enlace nuevo invalida el anterior.
   const { token, hash } = nuevoToken();
   const { error } = await s.supabase.from("contacts").update({ invite_token_hash: hash }).eq("id", c.id);
-  if (error) return { error: t.falloCorreo };
+  if (error) return { error: t.falloReenvio };
   // El enlace anterior ya no vale: si este correo falla, la invitación queda sin enviar.
   const enviado = await enviarInvitacion(s, c, token);
   await anotarEnvio(s, c.id, enviado);
   revalidatePath("/contactos");
-  return enviado ? { ok: true } : { error: t.falloCorreo };
+  return enviado ? { ok: true } : { error: t.falloReenvio };
 }
