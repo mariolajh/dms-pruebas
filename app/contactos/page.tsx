@@ -2,7 +2,8 @@ import { getBrand } from "@/lib/brand";
 import { textosContactos } from "@/components/contactos/textos";
 import Dia from "@/components/contactos/Dia";
 import Reenviar from "@/components/contactos/Reenviar";
-import { Badge, BarraTitulo, EnlaceBoton, Numero, Pantalla, Progreso, Tarjeta } from "@/components/emisor/ui";
+import Toast from "@/components/emisor/Toast";
+import { BarraTitulo, EnlaceBoton, Numero, Pantalla, Progreso, Tarjeta } from "@/components/emisor/ui";
 import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
 import type { DatosContacto } from "@/app/aviso/_datos/tipos";
@@ -49,11 +50,7 @@ export default async function Contactos({
     >
       {enAlta ? <Progreso actual={2} total={3} siguiente={t.siguiente} /> : <BarraTitulo titulo={t.titulo} volverHref="/home" />}
 
-      {enviada && (
-        <div role="status">
-          <Badge>{t.enviada}</Badge>
-        </div>
-      )}
+      {enviada && <Toast texto={t.enviada} quitarParametro="enviada" />}
       {fallo && (
         <p role="alert" className="rounded-lg border-2 border-danger bg-surface p-3 text-sm font-medium">
           {t.falloCorreo}
