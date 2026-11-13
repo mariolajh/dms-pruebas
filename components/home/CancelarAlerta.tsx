@@ -36,6 +36,8 @@ export default function CancelarAlerta({ textos }: { textos: TextosHome }) {
       <HoldButton
         label={textos.boton}
         help={textos.ayudaMantener}
+        helpSmall={textos.ayudaSuelta}
+        holdingLabel={textos.sigue}
         confirmQuestion={textos.confirmarPregunta}
         confirmYes={textos.confirmarSi}
         confirmBack={textos.volver}

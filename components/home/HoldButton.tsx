@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from "react";
 export default function HoldButton({
   label,
   help,
+  helpSmall,
+  holdingLabel,
   confirmQuestion,
   confirmYes,
   confirmBack,
@@ -18,6 +20,8 @@ export default function HoldButton({
 }: {
   label: string;
   help: string;
+  helpSmall: string;
+  holdingLabel: string;
   confirmQuestion: string;
   confirmYes: string;
   confirmBack: string;
@@ -105,8 +109,21 @@ export default function HoldButton({
     );
   }
 
+  const sujetando = progress > 0 && progress < 1;
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
+      {/* PRD 12/11 (E6): la instrucción va ARRIBA y en grande, antes del botón. */}
+      <div id="hold-help" className="flex items-start gap-3 rounded-xl bg-surface-muted p-4">
+        <span aria-hidden="true" className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-primary text-brand-on-primary">
+          <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.6-2.1L4 15.8a1.6 1.6 0 0 1 2.4-2L9 16" />
+          </svg>
+        </span>
+        <div>
+          <p className="text-xl font-bold leading-snug">{help}</p>
+          <p className="mt-1 text-text-muted">{helpSmall}</p>
+        </div>
+      </div>
       <button
         type="button"
         aria-describedby="hold-help"
@@ -117,18 +134,15 @@ export default function HoldButton({
         onPointerCancel={cancelHold}
         onContextMenu={(e) => e.preventDefault()}
         onClick={onClick}
-        className="relative min-h-14 w-full touch-none select-none overflow-hidden rounded-lg border-2 border-brand-primary bg-surface px-4 py-3 font-semibold disabled:opacity-60"
+        className="relative min-h-20 w-full touch-none select-none overflow-hidden rounded-2xl border-2 border-brand-primary bg-surface px-4 py-4 text-lg font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-60"
       >
         <span
           aria-hidden="true"
           className="absolute inset-y-0 left-0 bg-brand-primary/25"
           style={{ width: `${Math.round(progress * 100)}%` }}
         />
-        <span className="relative">{busy ? busyLabel : label}</span>
+        <span className="relative">{busy ? busyLabel : sujetando ? holdingLabel : label}</span>
       </button>
-      <p id="hold-help" className="text-sm text-text-muted">
-        {help}
-      </p>
     </div>
   );
 }

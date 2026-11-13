@@ -10,7 +10,10 @@ const COMUNES = {
   alertaCuerpo:
     "No registramos tu confirmación a tiempo. Si fue una falsa alarma y estás bien, puedes cancelarla.",
   boton: "Estoy bien, cancelar alerta",
-  ayudaMantener: "Mantén presionado el botón durante 2 segundos.",
+  // PRD 12/11 (E6): se explica arriba y en grande.
+  ayudaMantener: "Mantén presionado el botón 2 segundos",
+  ayudaSuelta: "Si lo sueltas antes, no se cancela nada.",
+  sigue: "Sigue presionando…",
   confirmarPregunta: "¿Confirmas que estás bien y quieres cancelar la alerta?",
   confirmarSi: "Sí, cancelar alerta",
   volver: "Volver",
