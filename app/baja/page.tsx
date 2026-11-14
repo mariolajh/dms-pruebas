@@ -4,6 +4,7 @@ import { getBrand } from "@/lib/brand";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { con, textosInvitacion } from "@/components/invitacion/textos";
 import { Pantalla, clases } from "@/components/emisor/ui";
+import BotonEnvio from "@/components/emisor/BotonEnvio";
 import { primerNombre } from "@/app/aviso/_datos/formato";
 import { darseDeBaja } from "./actions";
 
@@ -65,9 +66,9 @@ export default async function Baja({ searchParams }: { searchParams: Promise<{ t
               {t.fallo}
             </p>
           )}
-          <button type="submit" className={clases.principal}>
+          <BotonEnvio className={clases.principal} pendiente={t.baja.pendiente}>
             {t.baja.confirmar}
-          </button>
+          </BotonEnvio>
           <Link href={`/invitacion?token=${encodeURIComponent(token)}`} className={clases.secundario}>
             {t.baja.volver}
           </Link>

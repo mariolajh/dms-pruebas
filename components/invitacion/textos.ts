@@ -49,6 +49,7 @@ const COMUNES = {
     titulo: "¿Dejar de ser contacto de {nombre}?",
     texto: "No recibirás más avisos suyos.",
     confirmar: "Dejar de ser contacto",
+    pendiente: "Un momento…",
     volver: "Seguir siendo su contacto",
     hecho: "Ya no eres contacto de {nombre}",
     hechoTexto: "No recibirás más avisos suyos.",

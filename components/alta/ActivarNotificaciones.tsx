@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Badge, BarraTitulo, EnlaceBoton, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
+import Spinner from "@/components/emisor/Spinner";
 import type { TextosAlta } from "./textos";
 
 // Paso 1 del onboarding. Usa el mismo endpoint que el PushButton del núcleo (/api/push/subscribe).
@@ -116,7 +117,14 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
       pie={
         <>
           <button type="button" onClick={activar} disabled={fase === "activando"} className={clases.principal}>
-            {fase === "activando" ? t.activando : t.activar}
+            {fase === "activando" ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner />
+                {t.activando}
+              </span>
+            ) : (
+              t.activar
+            )}
           </button>
           <button
             type="button"
