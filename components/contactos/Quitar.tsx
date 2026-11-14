@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { quitarContacto, type EstadoQuitar } from "@/app/contactos/actions";
 import { clases } from "@/components/emisor/ui";
+import Spinner from "@/components/emisor/Spinner";
 import type { TextosContactos } from "./textos";
 
 // E5 · Quitar un contacto. Acción que no se deshace sola: pide confirmar en el mismo sitio.
@@ -49,7 +50,7 @@ export default function Quitar({
       )}
       <div className="flex gap-2">
         <button type="submit" disabled={enviando} className={clases.principal}>
-          {enviando ? t.quitando : t.quitarSi}
+          {enviando ? (<span className="inline-flex items-center gap-2"><Spinner className="size-4" />{t.quitando}</span>) : t.quitarSi}
         </button>
         <button type="button" disabled={enviando} className={clases.secundario} onClick={() => setAbierto(false)}>
           {t.quitarNo}

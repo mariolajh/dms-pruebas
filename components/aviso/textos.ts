@@ -46,6 +46,9 @@ const COMUNES = {
     // E-04 · Contactos: "Esperando que acepte la invitación. Podrás añadirla cuando acepte." (sin género).
     pendiente: "Esperando que acepte la invitación. Podrás añadir al contacto cuando acepte.",
     sinEnviar: "Invitación sin enviar",
+    // Contactos que se dieron de baja desde su correo.
+    salioUno: "{nombres} dejó de ser tu contacto y ya no recibirá avisos.",
+    salioVarios: "{nombres} dejaron de ser tus contactos y ya no recibirán avisos.",
     soloAceptados: "Solo avisamos a quien aceptó tu invitación.",
     nadieAcepto: "Todavía nadie aceptó tu invitación. Hasta entonces no podemos avisar a nadie.",
     sinContactos: "Todavía no tienes contactos.",

@@ -9,6 +9,7 @@ import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import { Badge, BarraTitulo, Numero, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import { rellenar, type TextosAviso } from "./textos";
 import SelectorHora from "./SelectorHora";
+import Spinner from "@/components/emisor/Spinner";
 
 // E · Configurar aviso · Hora / Contactos → Resumen → Guardando → Inicio.
 // Todo el asistente vive en una sola pantalla de cliente y se guarda al final (apagado).
@@ -42,11 +43,14 @@ export default function ConfigurarAviso({
   t,
   inicial,
   opciones,
+  salieron = [],
   limites,
   volverHref,
   enAlta,
   pasoInicial = "hora",
 }: {
+  // Nombres de quienes se dieron de baja desde su correo.
+  salieron?: string[];
   t: TextosAviso;
   inicial: Inicial;
   opciones: ContactoOpcion[];
@@ -388,6 +392,9 @@ export default function ConfigurarAviso({
       >
         {cabecera}
         <Tarjeta titulo={t.contactos.titulo} id="titulo-contactos">
+          {salieron.length > 0 && (
+            <p className="font-medium">{rellenar(salieron.length === 1 ? t.contactos.salioUno : t.contactos.salioVarios, { nombres: listaNombres(salieron) })}</p>
+          )}
           {textoOrden && <p className="text-text-muted">{textoOrden}</p>}
           {nombresElegidos.length > 0 && elegidos.some((c) => !c.accepted) && <p className="text-sm text-text-muted">{t.contactos.soloAceptados}</p>}
           {opciones.length === 0 && (
@@ -477,7 +484,7 @@ export default function ConfigurarAviso({
             </p>
           )}
           <button type="button" className={clases.principal} onClick={guardar} disabled={guardando} aria-busy={guardando}>
-            {guardando ? t.resumen.guardando : t.resumen.guardar}
+            {guardando ? (<span className="inline-flex items-center gap-2"><Spinner />{t.resumen.guardando}</span>) : t.resumen.guardar}
           </button>
         </>
       }

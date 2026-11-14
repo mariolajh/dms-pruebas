@@ -24,6 +24,8 @@ const COMUNES = {
   aceptoFueraUno: "{nombres} aceptó, pero no está en tu aviso. Pulsa Editar para agregar al contacto y poder encenderlo.",
   aceptoFueraVarios: "{nombres} aceptaron, pero no están en tu aviso. Pulsa Editar para agregar a los contactos y poder encenderlo.",
   avisoSinContactos: "Tu aviso no tiene contactos. Edítalo para añadir al menos uno.",
+  salioUno: "{nombres} dejó de ser tu contacto y ya no recibirá avisos.",
+  salioVarios: "{nombres} dejaron de ser tus contactos y ya no recibirán avisos.",
   rechazoUno: "{nombres} rechazó la invitación.",
   rechazoVarios: "{nombres} rechazaron la invitación.",
   verContactos: "Ver contactos",
@@ -49,20 +51,23 @@ const COMUNES = {
   noPudimosApagar: "No pudimos apagar tu aviso",
   revisaConexion: "Revisa tu conexión e inténtalo otra vez.",
   reintentar: "Reintentar",
+  cambiarHora: "Cambiar la hora del aviso",
   // E-12 Apagar aviso: pide confirmar. Para editar, "Apagar y editar" (solo se edita apagado).
   apagarPregunta: "¿Quieres apagar tu aviso?",
   apagarTexto: "Mientras esté apagado no avisaremos a nadie. Puedes encenderlo otra vez cuando quieras.",
   apagarBoton: "Apagar aviso",
   editarDesactivado: "Para editarlo, apaga primero tu aviso.",
   dejarActivo: "Dejarlo activo",
-  noSePuedeApagar: "No puedes apagar el aviso mientras esperamos tu confirmación.",
+  // Dentro de los 30 min previos a la hora: ni se apaga ni se edita.
+  noSePuedeTitulo: "Es hora de confirmar",
+  noSePuedeTexto: "Confirma que estás bien antes de las {hasta}. Hasta entonces no puedes apagar ni editar tu aviso.",
   encender: {
     // El título ya dice "No pudimos encender tu aviso": aquí solo la segunda parte.
     error: "Revisa tu conexión e inténtalo otra vez.",
     yaEncendido: "Tu aviso ya está encendido.",
     sinAviso: "Todavía no tienes un aviso. Configúralo primero.",
     sinAceptado: "Todavía nadie aceptó tu invitación. Podrás encenderlo cuando alguien acepte.",
-    horaPasada: "La hora de tu aviso ya pasó. Edítalo y elige una hora más tarde.",
+    horaPasada: "La hora de tu aviso ya pasó. Elige una hora nueva para poder encenderlo.",
   },
   apagar: {
     error: "Revisa tu conexión e inténtalo otra vez.",

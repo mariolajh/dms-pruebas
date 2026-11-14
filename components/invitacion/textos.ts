@@ -47,7 +47,7 @@ const COMUNES = {
   baja: {
     pestana: "Dejar de ser contacto",
     titulo: "¿Dejar de ser contacto de {nombre}?",
-    texto: "No recibirás más avisos suyos. {nombre} puede invitarte de nuevo si quiere.",
+    texto: "No recibirás más avisos suyos.",
     confirmar: "Dejar de ser contacto",
     volver: "Seguir siendo su contacto",
     hecho: "Ya no eres contacto de {nombre}",

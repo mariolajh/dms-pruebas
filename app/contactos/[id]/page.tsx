@@ -21,7 +21,7 @@ export default async function ContactoDetalle({ params }: { params: Promise<{ id
   // Todos los contactos vigentes: hace falta el número de fila, igual que en la lista.
   const { data: todos } = await s.supabase
     .from("contacts")
-    .select("id, name, email, status, created_at, accepted_at")
+    .select("id, name, email, status, created_at, accepted_at, removed_at")
     .eq("issuer_id", s.user.id)
     .neq("status", "removed")
     .order("position");
@@ -58,6 +58,7 @@ export default async function ContactoDetalle({ params }: { params: Promise<{ id
         relacion: e?.relacion ?? null,
         fecha: fechaIso ? dia(fechaIso) : null,
         enviada: !!e?.invitacionEnviadaEn,
+        salio: c.status === "rejected" && !!c.removed_at,
         orden,
         numero: i + 1,
         mensaje: e?.mensajeInvitacion ?? null,

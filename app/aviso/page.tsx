@@ -5,6 +5,7 @@ import ConfigurarAviso, { type ContactoOpcion, type Inicial } from "@/components
 import { CONFIG_EMISOR, configVersion } from "./_datos/config";
 import { adaptadorExtras } from "./_datos/adaptador";
 import { avisoActual, exigirSesion } from "./_datos/sesion";
+import { primerNombre } from "./_datos/formato";
 import type { DatosContacto, Frecuencia } from "./_datos/tipos";
 
 // E · Configurar aviso (Hora, Contactos) + Resumen + Guardando.
@@ -28,6 +29,14 @@ export default async function Aviso() {
     .in("status", ["pending", "accepted"])
     .order("position");
   const contactos = filas ?? [];
+  // Quienes se dieron de baja desde su correo siguen apareciendo: se dice que se fueron.
+  const { data: salidas } = await s.supabase
+    .from("contacts")
+    .select("name")
+    .eq("issuer_id", s.user.id)
+    .eq("status", "rejected")
+    .not("removed_at", "is", null)
+    .order("position");
   const extras = adaptadorExtras(s.supabase);
   const datosContactos = await extras
     .leerContactos(s.user.id, contactos.map((c) => c.id))
@@ -68,6 +77,7 @@ export default async function Aviso() {
       t={textosAviso(brand.variant)}
       inicial={inicial}
       opciones={opciones}
+      salieron={(salidas ?? []).map((c) => primerNombre(c.name as string))}
       limites={{
         graciaOpciones: CONFIG_EMISOR.gracia.opciones,
         graciaMin: CONFIG_EMISOR.gracia.minimoMin,

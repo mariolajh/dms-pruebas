@@ -16,8 +16,9 @@ export async function darseDeBaja(form: FormData) {
 
   const { data: c } = await admin.from("contacts").select("id, issuer_id, status").eq("invite_token_hash", hash).maybeSingle();
   if (!c) redirect("/baja");
-  if (c.status !== "removed") {
-    const { error } = await admin.from("contacts").update({ status: "removed", removed_at: new Date().toISOString() }).eq("id", c.id);
+  // Se queda en la lista de quien emite como "Ya no es contacto" (rechazado con fecha de salida): así se ve que se fue.
+  if (c.status !== "removed" && c.status !== "rejected") {
+    const { error } = await admin.from("contacts").update({ status: "rejected", removed_at: new Date().toISOString() }).eq("id", c.id);
     if (error) redirect(`${destino}&error=1`);
     // Sale del aviso; si era el último contacto aceptado de un aviso encendido, el aviso se apaga solo.
     await sacarDeAvisos(admin, c.issuer_id as string, c.id as string);

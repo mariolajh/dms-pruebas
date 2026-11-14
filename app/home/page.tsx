@@ -35,25 +35,25 @@ export default async function HomePage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, phone")
-    .eq("id", user.id)
-    .single();
+  // El perfil y el aviso se piden a la vez: cada consulta es un viaje a la base.
+  const [{ data: profile }, aviso] = await Promise.all([
+    supabase.from("profiles").select("full_name, phone").eq("id", user.id).single(),
+    avisoActual({ supabase, user }),
+  ]);
 
   const brand = getBrand();
   const textos = textosHome(brand.variant);
 
   // Desvío tras el login (Figma: «¿Cómo está su aviso?»):
   // sin aviso → onboarding · apagado → Inicio apagado · encendido / en alerta → lo de abajo.
-  const aviso = await avisoActual({ supabase, user });
   if (!aviso) redirect("/alta");
   if (aviso.state === "off") {
-    const { data: filas } = await supabase
-      .from("notice_contacts")
-      .select("position, contacts(id, name, status, accepted_at)")
-      .eq("notice_id", aviso.id)
-      .order("position");
+    const [{ data: filas }, extrasAviso, { data: todosAceptados }] = await Promise.all([
+      supabase.from("notice_contacts").select("position, contacts(id, name, status, accepted_at)").eq("notice_id", aviso.id).order("position"),
+      adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null),
+      // Contactos que ya aceptaron (para saber si alguno está fuera de este aviso).
+      supabase.from("contacts").select("id, name").eq("issuer_id", user.id).eq("status", "accepted"),
+    ]);
     const contactos = (filas ?? [])
       .map((f) => (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { id: string; name: string; status: string; accepted_at: string | null } | null)
       .filter((c): c is { id: string; name: string; status: string; accepted_at: string | null } => !!c && c.status !== "removed");
@@ -63,23 +63,25 @@ export default async function HomePage({
       .catch(() => ({}) as Record<string, DatosContacto>);
     const enviada = (c: { id: string }) => !!extras[c.id]?.invitacionEnviadaEn;
     const aceptados = contactos.filter((c) => c.status === "accepted").map((c) => primerNombre(c.name));
-    const extrasAviso = await adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null);
     // Contactos que ya aceptaron pero no están dentro de este aviso (el nombre sale de la base).
-    const { data: todosAceptados } = await supabase
-      .from("contacts")
-      .select("id, name")
-      .eq("issuer_id", user.id)
-      .eq("status", "accepted");
     const dentro = new Set(contactos.map((c) => c.id));
     const aceptadosFuera = (todosAceptados ?? []).filter((c) => !dentro.has(c.id)).map((c) => primerNombre(c.name));
     // Cuadro "X aceptó tu invitación": solo con aceptados recientes (7 días) que ya están en el aviso.
     const hace7 = Date.now() - 7 * 86_400_000;
     const recientes = contactos.filter((c) => c.status === "accepted" && c.accepted_at && new Date(c.accepted_at).getTime() > hace7).map((c) => primerNombre(c.name));
+    // Quienes se dieron de baja desde su correo en los últimos 30 días: Inicio dice que se fueron.
+    const { data: salidas } = await supabase
+      .from("contacts")
+      .select("name")
+      .eq("issuer_id", user.id)
+      .eq("status", "rejected")
+      .gt("removed_at", new Date(Date.now() - 30 * 86_400_000).toISOString());
     const tI = textosInicio(brand.variant);
     return (
       <InicioApagado
         avisoAceptacion={recientes.length ? { titulo: rellenar(recientes.length === 1 ? tI.aceptoUno : tI.aceptoVarios, { nombres: listaNombres(recientes) }), texto: tI.aceptoTexto, enlace: tI.verContactos } : undefined}
         aceptadosFuera={aceptadosFuera}
+        salieron={(salidas ?? []).map((c) => primerNombre(c.name as string))}
         t={textosInicio(brand.variant)}
         app={brand.name}
         nombre={primerNombre(profile?.full_name ?? "")}

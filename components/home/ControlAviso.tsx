@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { encenderAviso, apagarAviso } from "@/app/aviso/encender";
 import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
-import { proximoPlazo } from "@/app/aviso/_datos/formato";
+import { horaCorta, proximoPlazo } from "@/app/aviso/_datos/formato";
+import { rellenar } from "@/components/aviso/textos";
 import { clases } from "@/components/emisor/ui";
+import Spinner from "@/components/emisor/Spinner";
 import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import type { TextosInicio } from "./textosInicio";
 
@@ -13,6 +16,10 @@ import type { TextosInicio } from "./textosInicio";
 // Encender: sin diálogo (nota del flujo). Apagar: pide confirmar. "Editar" no vive aquí: es un botón
 // aparte que está desactivado con el aviso encendido y se activa al apagarlo (decisión de Mariola 14/11).
 // Los errores no se esconden: "Reintentar".
+
+function horaDe(d: Date) {
+  return horaCorta(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+}
 
 type Fase = "reposo" | "enviando" | "error" | "confirmando";
 
@@ -24,7 +31,10 @@ export default function ControlAviso({
   dias,
   estado,
   detalle,
+  notaEditar,
 }: {
+  // Aviso bajo el interruptor ("Para editarlo, apaga primero"). No sale mientras no se puede apagar.
+  notaEditar?: string;
   // Con estado, el interruptor va a la derecha de un bloque con el estado y su explicación (Inicio apagado).
   estado?: string;
   detalle?: string;
@@ -118,13 +128,19 @@ export default function ControlAviso({
         >
           {ocupado ? (
             <>
-              <p className="font-semibold">{encendido ? t.apagando : t.encendiendo}</p>
+              <p className="inline-flex items-center gap-2 font-semibold"><Spinner />{encendido ? t.apagando : t.encendiendo}</p>
               <p className="text-sm text-text-muted">{t.unMomento}</p>
             </>
           ) : (
             <>
               <p className="font-semibold">{encendido ? t.noPudimosApagar : t.noPudimosEncender}</p>
               <p className="text-sm text-text-muted">{error ?? t.revisaConexion}</p>
+              {/hora/.test(error ?? "") && !encendido && (
+                // La hora ya pasó: el camino es editar el aviso, así que va un botón directo.
+                <Link href="/aviso" className={clases.enlace}>
+                  {t.cambiarHora}
+                </Link>
+              )}
               {!/hora|alerta|confirm|aceptó/.test(error ?? "") && (
                 <button type="button" className={clases.enlace} onClick={() => (encendido ? apagar() : encender())}>
                   {t.reintentar}
@@ -180,14 +196,17 @@ export default function ControlAviso({
             ) : (
               <div className="flex items-center gap-3">
                 {interruptor}
-                <span className="text-sm">{etiqueta}</span>
+                {!bloqueado && <span className="text-sm">{etiqueta}</span>}
               </div>
             );
           })()}
-          {bloqueado && (
-            <p id="no-se-puede-apagar" className="text-sm text-text-muted">
-              {t.noSePuedeApagar}
-            </p>
+          {bloqueado ? (
+            <div id="no-se-puede-apagar" className="space-y-1 rounded-lg bg-surface-muted p-3">
+              <p className="font-semibold">{t.noSePuedeTitulo}</p>
+              <p className="text-sm text-text-muted">{rellenar(t.noSePuedeTexto, { hasta: horaDe(new Date(fireAt)) })}</p>
+            </div>
+          ) : (
+            notaEditar && <p className="text-sm text-text-muted">{notaEditar}</p>
           )}
         </>
       )}

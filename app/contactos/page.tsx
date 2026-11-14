@@ -24,7 +24,7 @@ export default async function Contactos({
   const [{ data }, aviso] = await Promise.all([
     s.supabase
       .from("contacts")
-      .select("id, name, status, created_at, accepted_at")
+      .select("id, name, status, created_at, accepted_at, removed_at")
       .eq("issuer_id", s.user.id)
       .neq("status", "removed")
       .order("position"),

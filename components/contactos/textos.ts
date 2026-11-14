@@ -58,6 +58,7 @@ const COMUNES = {
   detalle: {
     titulo: "Detalle del contacto",
     noRecibira: "No recibirá tus alertas",
+    salioSub: "Dejó de ser tu contacto",
     aceptoEl: "Aceptó",
     invitacionEnviada: "Invitación enviada",
     sinEnviar: "Invitación sin enviar",
@@ -94,6 +95,8 @@ const COMUNES = {
     estadoEspera: "En espera",
     estadoAcepto: "Aceptó",
     estadoNoAcepto: "No aceptó",
+    // Se dio de baja desde su correo (rechazado con fecha de salida).
+    estadoSalio: "Ya no es contacto",
     primeroTitulo: "Agrega tu primer contacto",
     segundoTitulo: "Agrega un segundo contacto",
     // {nombre} es el único contacto de la lista.

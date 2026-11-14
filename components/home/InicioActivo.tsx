@@ -4,6 +4,7 @@ import { rellenar } from "@/components/aviso/textos";
 import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import BarraNavegacion from "./BarraNavegacion";
 import ControlAviso from "./ControlAviso";
+import EditarActivo from "./EditarActivo";
 import PlazoActivo from "./PlazoActivo";
 import type { TextosInicio } from "./textosInicio";
 
@@ -32,20 +33,11 @@ export default function InicioActivo({
           {/* "Editar" siempre está: desactivado con el aviso encendido, se activa al apagarlo. */}
           <div className="flex items-center justify-between gap-2">
             <Badge>{t.activo}</Badge>
-            <button
-              type="button"
-              disabled
-              aria-label={t.editarAria}
-              title={t.editarDesactivado}
-              className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 opacity-50 disabled:cursor-not-allowed"
-            >
-              {t.editar}
-            </button>
+            <EditarActivo fireAt={plazo.fireAt} texto={t.editar} aria={t.editarAria} titulo={t.editarDesactivado} />
           </div>
           <h2 className="text-lg font-semibold">{t.tuAviso}</h2>
           <PlazoActivo t={t} fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} />
-          <ControlAviso t={t} encendido fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} />
-          <p className="text-sm text-text-muted">{t.editarDesactivado}</p>
+          <ControlAviso t={t} encendido fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} notaEditar={t.editarDesactivado} />
         </Tarjeta>
       </main>
       <BarraNavegacion t={t.nav} actual="inicio" />

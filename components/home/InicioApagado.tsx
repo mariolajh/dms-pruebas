@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Encabezado, EnlaceBoton, Tarjeta, clases } from "@/components/emisor/ui";
 import Toast from "@/components/emisor/Toast";
+import RefrescarSolo from "@/components/emisor/RefrescarSolo";
 import { listaNombres } from "@/app/aviso/_datos/formato";
 import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import { rellenar } from "@/components/aviso/textos";
@@ -33,11 +34,14 @@ export default function InicioApagado({
   vacio,
   aceptados,
   aceptadosFuera = [],
+  salieron = [],
   plazo,
   apagadoAhora,
   avisoAceptacion,
 }: {
   aceptadosFuera?: string[];
+  // Quienes se dieron de baja desde su correo.
+  salieron?: string[];
   // PROPUESTA para Luna (solo se usa en /muestra): cuadro que avisa de que alguien aceptó.
   avisoAceptacion?: { titulo: string; texto: string; enlace: string };
   t: TextosInicio;
@@ -57,6 +61,8 @@ export default function InicioApagado({
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
       <main className="flex-1 space-y-4 p-4">
+        {/* Si alguien acepta mientras tanto, Inicio se actualiza solo. */}
+        <RefrescarSolo />
         {apagadoAhora && <Toast texto={t.apagadoListo} quitarParametro="apagado" />}
         <Encabezado nombre={app} />
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>
@@ -109,17 +115,18 @@ export default function InicioApagado({
 
           {/* Avisos: aparte, en letra normal y con icono. Con un aceptado (dentro o fuera del aviso) ya se puede avanzar:
               avisar de otra invitación sin enviar solo confunde. */}
-          {(!hayAceptado && !hayFuera && sinEnviar.length > 0) || rechazados.length > 0 ? (
+          {(!hayAceptado && !hayFuera && sinEnviar.length > 0) || rechazados.length > 0 || salieron.length > 0 ? (
             <div className="space-y-2 border-t border-border/40 pt-3">
               {!hayAceptado && !hayFuera && sinEnviar.length > 0 && (
                 <Nota>{rellenar(sinEnviar.length === 1 ? t.noEnviadaUno : t.noEnviadaVarios, { nombres: listaNombres(sinEnviar) })}</Nota>
               )}
+              {salieron.length > 0 && <Nota>{rellenar(salieron.length === 1 ? t.salioUno : t.salioVarios, { nombres: listaNombres(salieron) })}</Nota>}
               {rechazados.length > 0 && <Nota>{rellenar(rechazados.length === 1 ? t.rechazoUno : t.rechazoVarios, { nombres: listaNombres(rechazados) })}</Nota>}
             </div>
           ) : null}
 
           {!hayAceptado && (
-            <EnlaceBoton href="/contactos" tipo="secundario">
+            <EnlaceBoton href="/contactos">
               {t.verContactos}
             </EnlaceBoton>
           )}

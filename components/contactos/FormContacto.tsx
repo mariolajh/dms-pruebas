@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { invitarContacto, type EstadoInvitar } from "@/app/contactos/actions";
 import { Segmentado } from "@/components/aviso/ConfigurarAviso";
+import Spinner from "@/components/emisor/Spinner";
 import { BarraTitulo, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import type { TextosContactos } from "./textos";
 
@@ -39,7 +40,7 @@ export default function FormContacto({
         pie={
           <>
             <button type="submit" disabled={enviando} className={clases.principal}>
-              {enviando ? t.enviando : t.enviar}
+              {enviando ? (<span className="inline-flex items-center gap-2"><Spinner />{t.enviando}</span>) : t.enviar}
             </button>
             {/* Fuera del alta ya hay flecha de volver arriba. */}
             {enAlta && (

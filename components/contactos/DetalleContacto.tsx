@@ -14,6 +14,8 @@ export type FilaDetalle = {
   // Fecha ya formateada ("3 nov"): aceptó o salió la invitación. null si no hay.
   fecha: string | null;
   enviada: boolean;
+  // Se dio de baja desde su correo.
+  salio?: boolean;
   // Posición dentro del aviso (1 a 5) o null si no está.
   orden: number | null;
   numero: number;
@@ -32,7 +34,7 @@ export default function DetalleContacto({
   const acepto = c.status === "accepted";
   const rechazo = c.status === "rejected";
   const etiquetaFecha = acepto ? t.aceptoEl : c.enviada ? t.invitacionEnviada : t.sinEnviar;
-  const estado = acepto ? tLista.estadoAcepto : rechazo ? tLista.estadoNoAcepto : tLista.estadoEspera;
+  const estado = acepto ? tLista.estadoAcepto : rechazo ? (c.salio ? tLista.estadoSalio : tLista.estadoNoAcepto) : tLista.estadoEspera;
   const orden = c.orden ? t.orden[c.orden - 1] : t.sinOrden;
 
   const filas: [string, string][] = [];
@@ -48,7 +50,7 @@ export default function DetalleContacto({
           <Numero n={c.numero} />
           <div className="min-w-0 flex-1">
             <p className="font-semibold">{c.name}</p>
-            <p className="text-sm text-text-muted">{rechazo ? t.noRecibira : c.relacion ?? ""}</p>
+            <p className="text-sm text-text-muted">{rechazo ? (c.salio ? t.salioSub : t.noRecibira) : c.relacion ?? ""}</p>
           </div>
           <Badge>{estado}</Badge>
         </div>
@@ -63,11 +65,12 @@ export default function DetalleContacto({
       </Tarjeta>
       <div className="space-y-2">
         {acepto ? (
-          <EnlaceBoton href={`/contactos/${c.id}/editar`} tipo="secundario">
+          <EnlaceBoton href={`/contactos/${c.id}/editar`}>
             {t.editarContacto}
           </EnlaceBoton>
-        ) : (
-          <Reenviar contactId={c.id} nombre={c.name} sinEnviar={!c.enviada && !rechazo} t={tLista} comoBoton />
+        ) : rechazo ? null : (
+          // Quien no aceptó (rechazó) no recibe más invitaciones: aquí no se ofrece reenviar.
+          <Reenviar contactId={c.id} nombre={c.name} sinEnviar={!c.enviada} t={tLista} comoBoton />
         )}
         <Quitar
           contactId={c.id}

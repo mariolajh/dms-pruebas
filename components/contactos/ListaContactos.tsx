@@ -3,6 +3,7 @@ import Reenviar from "@/components/contactos/Reenviar";
 import BarraNavegacion from "@/components/home/BarraNavegacion";
 import type { TextosInicio } from "@/components/home/textosInicio";
 import Toast from "@/components/emisor/Toast";
+import RefrescarSolo from "@/components/emisor/RefrescarSolo";
 import Quitar from "@/components/contactos/Quitar";
 import { rellenar } from "@/components/aviso/textos";
 import { Badge, Encabezado, EnlaceBoton, Numero, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
@@ -11,7 +12,7 @@ import type { TextosContactos } from "./textos";
 
 // R-AV-E1 · Web Aviso · invitación enviada (alta) y E-05 · Contactos (fuera del alta).
 // Solo pinta: los datos los pone la página.
-export type ContactoFila = { id: string; name: string; status: string; created_at: string };
+export type ContactoFila = { id: string; name: string; status: string; created_at: string; removed_at?: string | null };
 
 const dia = (iso: string) => new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" }).replace(".", "");
 
@@ -116,6 +117,8 @@ export default function ListaContactos({
         </>
       )}
 
+      {/* Los estados (Aceptó, No aceptó) cambian desde el correo del contacto: se actualizan solos. */}
+      {!enAlta && <RefrescarSolo />}
       {enviada && <Toast texto={t.enviada} quitarParametro="enviada" />}
       {quitado && <Toast texto={t.quitado} quitarParametro="quitado" />}
       {guardado && <Toast texto={t.guardado} quitarParametro="guardado" />}
@@ -144,7 +147,7 @@ export default function ListaContactos({
                   <Badge>
                     <span className="inline-flex items-center gap-1">
                       <Icono tipo={c.status === "accepted" ? "ok" : c.status === "rejected" ? "no" : "espera"} />
-                      {c.status === "accepted" ? t.estadoAcepto : c.status === "rejected" ? t.estadoNoAcepto : t.estadoEspera}
+                      {c.status === "accepted" ? t.estadoAcepto : c.status === "rejected" ? (c.removed_at ? t.estadoSalio : t.estadoNoAcepto) : t.estadoEspera}
                     </span>
                   </Badge>
                 </div>
@@ -173,7 +176,7 @@ export default function ListaContactos({
             <h2 className="font-semibold">{tarjetaAgregar.titulo}</h2>
           </div>
           {tarjetaAgregar.texto && <p className="text-text-muted">{tarjetaAgregar.texto}</p>}
-          <EnlaceBoton href="/contactos/nuevo" tipo={"info" in tarjetaAgregar && tarjetaAgregar.info ? "principal" : "secundario"}>
+          <EnlaceBoton href="/contactos/nuevo">
             <Mas />
             {t.agregar}
           </EnlaceBoton>

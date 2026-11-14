@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BotonEnlace from "./BotonEnlace";
 
 // Piezas de pantalla compartidas por el flujo de quien emite (alta, contactos, aviso, inicio).
 // Equivalen a componentes de la Biblioteca (Barra de título, Stepper, Card, Zona de acción fija,
@@ -25,7 +26,7 @@ export function Pantalla({ children, pie, nav }: { children: React.ReactNode; pi
       <main className="flex-1 space-y-4 p-4 pb-8">{children}</main>
       {pie && (
         // Zona de acción fija: deja el foco visible al hacer scroll (WCAG 2.4.12).
-        <div className="sticky bottom-0 space-y-2 border-t border-border/40 bg-surface p-4">{pie}</div>
+        <div className="sticky bottom-0 space-y-2 border-t border-border/40 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{pie}</div>
       )}
       {nav}
     </div>
@@ -135,8 +136,8 @@ export function Numero({ n }: { n: number }) {
 
 export function EnlaceBoton({ href, children, tipo = "principal" }: { href: string; children: React.ReactNode; tipo?: "principal" | "secundario" }) {
   return (
-    <Link href={href} className={tipo === "principal" ? clases.principal : clases.secundario}>
+    <BotonEnlace href={href} className={tipo === "principal" ? clases.principal : clases.secundario}>
       {children}
-    </Link>
+    </BotonEnlace>
   );
 }

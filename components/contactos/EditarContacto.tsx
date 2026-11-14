@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { guardarContacto, type EstadoEditar } from "@/app/contactos/actions";
 import { rellenar } from "@/components/aviso/textos";
+import Spinner from "@/components/emisor/Spinner";
 import { BarraTitulo, Pantalla, Tarjeta, clases } from "@/components/emisor/ui";
 import type { TextosContactos } from "./textos";
 
@@ -34,7 +35,7 @@ export default function EditarContacto({
       <Pantalla
         pie={
           <button type="submit" disabled={enviando} className={clases.principal}>
-            {enviando ? t.guardando : t.guardar}
+            {enviando ? (<span className="inline-flex items-center gap-2"><Spinner />{t.guardando}</span>) : t.guardar}
           </button>
         }
       >
