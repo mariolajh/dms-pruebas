@@ -67,7 +67,7 @@ export const adaptadorFichero: AdaptadorExtras = {
     const out: Record<string, DatosContacto> = {};
     for (const id of contactIds) {
       const c = f.contactos[id];
-      if (c && c.issuerId === issuerId) out[id] = { relacion: c.relacion, invitacionEnviadaEn: c.invitacionEnviadaEn, mensajeInvitacion: c.mensajeInvitacion ?? null };
+      if (c && c.issuerId === issuerId) out[id] = { relacion: c.relacion, invitacionEnviadaEn: c.invitacionEnviadaEn, mensajeInvitacion: c.mensajeInvitacion?.trim() || null };
     }
     return out;
   },

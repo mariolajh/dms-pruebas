@@ -94,7 +94,7 @@ export function crearAdaptadorSupabase(supabase: SupabaseClient): AdaptadorExtra
       if (!errMsg)
         for (const r of msgs ?? []) {
           const previo = out[r.contact_id as string];
-          if (previo) previo.mensajeInvitacion = (r.invite_message as string | null) ?? null;
+          if (previo) previo.mensajeInvitacion = (r.invite_message as string | null)?.trim() || null;
         }
       return out;
     },
