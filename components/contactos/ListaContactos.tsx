@@ -1,10 +1,11 @@
+import Link from "next/link";
 import Reenviar from "@/components/contactos/Reenviar";
 import BarraNavegacion from "@/components/home/BarraNavegacion";
 import type { TextosInicio } from "@/components/home/textosInicio";
 import Toast from "@/components/emisor/Toast";
 import Quitar from "@/components/contactos/Quitar";
 import { rellenar } from "@/components/aviso/textos";
-import { Badge, Encabezado, EnlaceBoton, Numero, Pantalla, Progreso, Tarjeta } from "@/components/emisor/ui";
+import { Badge, Encabezado, EnlaceBoton, Numero, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import type { DatosContacto } from "@/app/aviso/_datos/tipos";
 import type { TextosContactos } from "./textos";
 
@@ -13,6 +14,14 @@ import type { TextosContactos } from "./textos";
 export type ContactoFila = { id: string; name: string; status: string; created_at: string };
 
 const dia = (iso: string) => new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" }).replace(".", "");
+
+function Mas() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="mr-2 size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
 
 function Icono({ tipo }: { tipo: "espera" | "ok" | "no" }) {
   const trazo = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -41,6 +50,8 @@ export default function ListaContactos({
   enviada,
   quitado,
   fallo,
+  guardado,
+  correoNuevo,
 }: {
   t: TextosContactos["lista"];
   nav: TextosInicio["nav"];
@@ -52,6 +63,8 @@ export default function ListaContactos({
   enviada?: boolean;
   quitado?: boolean;
   fallo?: boolean;
+  guardado?: boolean;
+  correoNuevo?: boolean;
 }) {
   const puedeAgregar = contactos.length < maximo;
   // Para continuar el alta hace falta alguien a quien poder avisar (no vale solo quien rechazó).
@@ -94,6 +107,8 @@ export default function ListaContactos({
 
       {enviada && <Toast texto={t.enviada} quitarParametro="enviada" />}
       {quitado && <Toast texto={t.quitado} quitarParametro="quitado" />}
+      {guardado && <Toast texto={t.guardado} quitarParametro="guardado" />}
+      {correoNuevo && <Toast texto={t.correoNuevo} quitarParametro="correo" />}
       {fallo && (
         <p role="alert" className="rounded-lg border-2 border-danger bg-surface p-3 text-sm font-medium">
           {t.falloCorreo}
@@ -124,7 +139,11 @@ export default function ListaContactos({
                 </div>
                 {/* "Invitación sin enviar": no está en el wireflow, pero nunca se dice "enviada" si el correo no salió. */}
                 {c.status === "pending" && !enviadaEn && <p className="text-sm font-medium text-danger">{t.noEnviada}</p>}
+                {/* Decisión del 14/11: las acciones van en la lista (menos toques). "Editar" abre E-17. */}
                 <div className="flex flex-wrap items-start gap-x-6">
+                  <Link href={`/contactos/${c.id}`} className={clases.enlace} aria-label={`${t.editar}: ${c.name}`}>
+                    {t.editar}
+                  </Link>
                   {c.status === "pending" && <Reenviar contactId={c.id} nombre={c.name} sinEnviar={!enviadaEn} t={t} />}
                   <Quitar contactId={c.id} nombre={c.name} estado={c.status === "pending" && !enviadaEn ? "sinEnviar" : (c.status as "pending" | "accepted" | "rejected")} t={t} />
                 </div>
@@ -141,11 +160,17 @@ export default function ListaContactos({
           <h2 className="font-semibold">{tarjetaAgregar.titulo}</h2>
           {tarjetaAgregar.texto && <p className="text-text-muted">{tarjetaAgregar.texto}</p>}
           <EnlaceBoton href="/contactos/nuevo" tipo="secundario">
+            <Mas />
             {t.agregar}
           </EnlaceBoton>
         </section>
       )}
-      {!enAlta && puedeAgregar && !tarjetaAgregar && <EnlaceBoton href="/contactos/nuevo">{t.agregar}</EnlaceBoton>}
+      {!enAlta && puedeAgregar && !tarjetaAgregar && (
+        <EnlaceBoton href="/contactos/nuevo">
+          <Mas />
+          {t.agregar}
+        </EnlaceBoton>
+      )}
     </Pantalla>
   );
 }

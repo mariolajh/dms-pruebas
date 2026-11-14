@@ -15,9 +15,9 @@ export async function generateMetadata() {
 export default async function Contactos({
   searchParams,
 }: {
-  searchParams: Promise<{ enviada?: string; fallo?: string; quitado?: string }>;
+  searchParams: Promise<{ enviada?: string; fallo?: string; quitado?: string; guardado?: string; correo?: string }>;
 }) {
-  const { enviada, fallo, quitado } = await searchParams;
+  const { enviada, fallo, quitado, guardado, correo } = await searchParams;
   const s = await exigirSesion();
   const marca = getBrand();
 
@@ -47,6 +47,8 @@ export default async function Contactos({
       enviada={!!enviada}
       quitado={!!quitado}
       fallo={!!fallo}
+      guardado={!!guardado}
+      correoNuevo={!!correo}
     />
   );
 }

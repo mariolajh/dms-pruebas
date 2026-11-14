@@ -11,24 +11,55 @@ const COMUNES = {
     texto: "Le enviaremos una invitación por correo. No tiene que instalar nada.",
     tarjetaPrimero: "Primer contacto",
     tarjetaOtro: "Nuevo contacto",
+    // E-06 del wireflow (fuera del alta): título, relación y mensaje de invitación.
+    tituloFuera: "Agregar contacto",
     nombre: "Nombre",
     nombreEjemplo: "Ej.: Ana Ruiz",
-    correo: "Correo",
+    nombreAyuda: "Nombre y apellido.",
+    relacion: "Relación",
+    opcional: "(opcional)",
+    relacionEjemplo: "Ej.: Pareja, vecina, hijo",
+    relacionAyuda: "Así reconocerás a esta persona en tu lista.",
+    correo: "Correo electrónico",
     correoEjemplo: "Ej.: ana@correo.com",
-    correoAyuda: "Aquí le llegará la invitación",
+    correoAyuda: "Le llegará la invitación a este correo.",
+    mensaje: "Mensaje de invitación",
+    general: "General",
+    personalizado: "Personalizado",
+    generalAyuda: "Le explicamos qué es ser tu contacto y cómo aceptar.",
+    tuMensaje: "Tu mensaje",
+    tuMensajeAyuda: "Lo verá en el correo, antes de la explicación.",
+    errorMensaje: "Escribe tu mensaje o elige General.",
     enviar: "Enviar invitación",
     enviando: "Enviando…",
     cancelar: "Cancelar",
     // Errores que el diseño no cubre (pendientes de revisar con diseño).
-    errorNombre: "Escribe su nombre.",
-    errorCorreo: "Escribe un correo válido, por ejemplo ana@correo.com.",
+    errorNombre: "Escribe el nombre del contacto.",
+    errorCorreo: "Escribe un correo válido, como ana@correo.com.",
     errorRepetido: "Ya invitaste a este correo.",
-    errorMaximo: "Ya tienes 5 contactos, que es el máximo.",
+    errorMaximo: "Ya tienes 5 contactos, el máximo. Quita uno para invitar a otra persona.",
     errorGuardar: "No pudimos guardar el contacto. Revisa tu conexión e inténtalo de nuevo.",
   },
+  // E-17 del wireflow, sin la pantalla de Detalle (E-16): se llega desde "Editar" en la lista.
+  editar: {
+    titulo: "Editar contacto",
+    // {nombre} es el primer nombre del contacto.
+    correoAyuda: "Si lo cambias, {nombre} tendrá que aceptar otra vez.",
+    // Quien todavía no aceptó no tiene que aceptar "otra vez".
+    correoAyudaPendiente: "Si lo cambias, enviaremos la invitación al correo nuevo.",
+    correoAyudaApaga: "Si lo cambias, {nombre} tendrá que aceptar otra vez y tu aviso se apagará hasta que acepte.",
+    guardar: "Guardar cambios",
+    guardando: "Guardando…",
+    errorGuardar: "No pudimos guardar los cambios. Revisa tu conexión e inténtalo otra vez.",
+    errorAlerta: "Tu aviso tiene una alerta en curso. Podrás cambiar el correo cuando la canceles.",
+    noExiste: "Este contacto ya no está en tu lista.",
+  },
   lista: {
+    editar: "Editar",
+    guardado: "Cambios guardados",
+    correoNuevo: "Cambios guardados. Enviamos una invitación al correo nuevo.",
     siguiente: "Siguiente: Configurar aviso",
-    enviada: "Invitación enviada",
+    enviada: "Invitación enviada. Le llegará un correo con el enlace.",
     titulo: "Tus contactos",
     // Sin "te avisamos": hoy no se avisa al emisor cuando alguien acepta (pedido al núcleo).
     texto: "Cuando alguien acepte, podrás encender tu aviso.",
@@ -55,7 +86,7 @@ const COMUNES = {
     reenviando: "Reenviando…",
     reenviada: "Invitación reenviada",
     // El diseño no cubre que el correo falle. Nunca se dice "enviada" si no salió.
-    falloCorreo: "Guardamos el contacto, pero no pudimos enviarle la invitación por correo. Pulsa «Enviar invitación» para intentarlo de nuevo.",
+    falloCorreo: "Guardamos el contacto, pero no pudimos enviarle la invitación por correo. Pulsa \"Enviar invitación\" para intentarlo de nuevo.",
     // Al reenviar. "Guardamos el contacto…" solo vale al crear uno nuevo.
     falloReenvio: "No pudimos reenviar la invitación. Inténtalo de nuevo.",
     yaRespondio: "Esta persona ya respondió a la invitación. Actualizamos la lista.",
@@ -78,8 +109,10 @@ const COMUNES = {
   correo: {
     asunto: (quien: string) => `${quien} te invitó a ser su contacto de confianza`,
     // PROVISIONAL: el texto definitivo de la invitación es del flujo de quien recibe (R1).
-    cuerpo: (contacto: string, quien: string, app: string, enlace: string) =>
+    // mensaje: texto personalizado de quien invita (ya escapado). Vacío = invitación general.
+    cuerpo: (contacto: string, quien: string, app: string, enlace: string, mensaje = "") =>
       `<p>Hola, ${contacto}:</p>` +
+      (mensaje ? `<p>${quien} te escribe: "${mensaje}"</p>` : "") +
       `<p>${quien} te eligió como contacto de confianza en ${app}. Si un día no confirma a tiempo que está bien, te avisaremos para que puedas comunicarte con esa persona.</p>` +
       `<p>No tienes que instalar nada ni crear una cuenta.</p>` +
       `<p><a href="${enlace}">Ver la invitación</a></p>`,

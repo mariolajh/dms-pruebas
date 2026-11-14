@@ -55,7 +55,7 @@ const COMUNES = {
   },
   invalida: {
     titulo: "Este enlace ya no vale",
-    texto: "La invitación ya no está activa. Si tienes un correo más reciente, usa ese enlace.",
+    texto: "Este enlace ya no está activo. Si tienes un correo más reciente, usa ese enlace.",
   },
   fallo: "No pudimos guardar tu respuesta. Inténtalo de nuevo.",
   sinConfigurar: "Falta configurar el servidor para recibir invitaciones.",

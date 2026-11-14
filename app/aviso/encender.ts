@@ -6,6 +6,7 @@ import { getBrand } from "@/lib/brand";
 import { textosInicio } from "@/components/home/textosInicio";
 import { CONFIG_EMISOR } from "./_datos/config";
 import { exigirSesion } from "./_datos/sesion";
+import { cancelarProgramado } from "./_datos/qstash";
 
 // Encender y apagar el aviso (E-14 y E-12 del wireflow). El aviso empieza apagado, se enciende solo
 // si hay al menos un contacto aceptado en él y se edita solo apagado.
@@ -88,16 +89,6 @@ async function programar(noticeId: string, fire: Date): Promise<{ ok: true; mess
   } catch (e) {
     console.error("[encender] QStash falló:", e instanceof Error ? e.message : e);
     return { ok: false };
-  }
-}
-
-async function cancelarProgramado(messageId: string | null) {
-  const token = process.env.QSTASH_TOKEN;
-  if (!token || !messageId) return;
-  try {
-    await new Client({ token, baseUrl: process.env.QSTASH_URL }).messages.delete(messageId);
-  } catch {
-    // Si ya se disparó o no existe, seguimos: /api/alert ignora los avisos que no están activos.
   }
 }
 

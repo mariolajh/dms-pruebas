@@ -9,6 +9,7 @@ import { textosAviso } from "@/components/aviso/textos";
 import ConfigurarAviso, { type ContactoOpcion, type Paso } from "@/components/aviso/ConfigurarAviso";
 import { textosContactos } from "@/components/contactos/textos";
 import FormContacto from "@/components/contactos/FormContacto";
+import EditarContacto from "@/components/contactos/EditarContacto";
 import ListaContactos, { type ContactoFila } from "@/components/contactos/ListaContactos";
 import { textosInicio } from "@/components/home/textosInicio";
 import InicioDeMuestra from "@/components/muestra/InicioDeMuestra";
@@ -91,6 +92,15 @@ export default async function PantallaDeMuestra({ params }: { params: Promise<{ 
     "alta-contactos": () => lista([ANA("pending")], true),
     "alta-aviso": () => aviso("hora", true),
     "agregar-contacto": () => <FormContacto t={tContactos.nuevo} enAlta={false} esPrimero={false} cancelarHref="/muestra" />,
+    "editar-contacto": () => (
+      <EditarContacto
+        t={tContactos.editar}
+        tNuevo={tContactos.nuevo}
+        contacto={{ id: "ana", name: "Ana Ruiz", email: "ana@correo.com", relacion: "Hermana", primerNombre: "Ana" }}
+        apagaAviso={false}
+        acepto
+      />
+    ),
     "contactos-en-espera": () => lista([ANA("pending")]),
     "contactos-acepto": () => lista([ANA("accepted"), LUIS("pending")]),
     "contactos-no-acepto": () => lista([ANA("rejected")]),

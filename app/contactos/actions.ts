@@ -9,15 +9,15 @@ import { textosContactos } from "@/components/contactos/textos";
 import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
 import { exigirSesion, type Sesion } from "@/app/aviso/_datos/sesion";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
-import { sacarDeAvisos } from "./_baja";
+import { apagarSinAceptados, sacarDeAvisos } from "./_baja";
 
 // E5 · Invitar contactos. El contacto se guarda como `pending` con el hash del token;
 // el token en claro solo viaja en el enlace del correo.
 
 export type EstadoInvitar = {
   error?: string;
-  campo?: "name" | "email";
-  valores?: { name: string; email: string };
+  campo?: "name" | "email" | "mensaje";
+  valores?: { name: string; email: string; relacion?: string; mensaje?: string };
 };
 
 const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -40,7 +40,7 @@ async function anotarEnvio(s: Sesion, contactId: string, enviado: boolean) {
 }
 
 // Devuelve true solo si Resend aceptó el correo.
-async function enviarInvitacion(s: Sesion, contacto: { name: string; email: string }, token: string) {
+async function enviarInvitacion(s: Sesion, contacto: { name: string; email: string }, token: string, mensaje = "") {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) return false;
   const brand = getBrand();
@@ -53,7 +53,7 @@ async function enviarInvitacion(s: Sesion, contacto: { name: string; email: stri
     await sendEmail({
       to: contacto.email,
       subject: t.asunto(perfil?.full_name?.trim() || "Una persona"),
-      html: t.cuerpo(escaparHtml(contacto.name), quien, escaparHtml(brand.name), enlace),
+      html: t.cuerpo(escaparHtml(contacto.name), quien, escaparHtml(brand.name), enlace, escaparHtml(mensaje)),
     });
     return true;
   } catch (e) {
@@ -67,10 +67,15 @@ export async function invitarContacto(_prev: EstadoInvitar, form: FormData): Pro
   const t = textosContactos(getBrand().variant).nuevo;
   const name = String(form.get("name") ?? "").trim().slice(0, 80);
   const email = String(form.get("email") ?? "").trim().toLowerCase();
-  const valores = { name, email };
+  // Relación y mensaje personalizado (E-06). El mensaje solo viaja en este correo: no se guarda.
+  const relacion = String(form.get("relacion") ?? "").trim().slice(0, 40);
+  const personalizado = form.get("modo") === "personalizado";
+  const mensaje = personalizado ? String(form.get("mensaje") ?? "").trim().slice(0, CONFIG_EMISOR.mensajeMax) : "";
+  const valores = { name, email, relacion, mensaje };
 
   if (!name) return { error: t.errorNombre, campo: "name", valores };
   if (!CORREO_VALIDO.test(email)) return { error: t.errorCorreo, campo: "email", valores };
+  if (personalizado && !mensaje) return { error: t.errorMensaje, campo: "mensaje", valores };
 
   const { data: actuales, error: errLeer } = await s.supabase
     .from("contacts")
@@ -99,7 +104,12 @@ export async function invitarContacto(_prev: EstadoInvitar, form: FormData): Pro
     .single();
   if (errInsert || !nuevo) return { error: t.errorGuardar, valores };
 
-  const enviado = await enviarInvitacion(s, { name, email }, token);
+  if (relacion) {
+    await adaptadorExtras(s.supabase)
+      .guardarRelacion(s.user.id, nuevo.id as string, relacion)
+      .catch((e) => console.error("[contactos] relación no guardada:", e instanceof Error ? e.message : e));
+  }
+  const enviado = await enviarInvitacion(s, { name, email }, token, mensaje);
   await anotarEnvio(s, nuevo.id as string, enviado);
   revalidatePath("/contactos");
   redirect(enviado ? "/contactos?enviada=1" : "/contactos?fallo=1");
@@ -153,4 +163,64 @@ export async function quitarContacto(_prev: EstadoQuitar, form: FormData): Promi
   revalidatePath("/contactos");
   revalidatePath("/home");
   redirect("/contactos?quitado=1");
+}
+
+export type EstadoEditar = {
+  error?: string;
+  campo?: "name" | "email";
+  valores?: { name: string; email: string; relacion: string };
+};
+
+// E-17 · Editar contacto ("reemplazar" de E5). Nombre y relación se guardan sin más.
+// Si cambia el correo, la persona tiene que aceptar otra vez (decisión del 2/11): vuelve a "en espera",
+// sale una invitación nueva y, si era la única que había aceptado, el aviso encendido se apaga.
+export async function guardarContacto(_prev: EstadoEditar, form: FormData): Promise<EstadoEditar> {
+  const s = await exigirSesion();
+  const textos = textosContactos(getBrand().variant);
+  const t = textos.editar;
+  const id = String(form.get("contact_id") ?? "");
+  const name = String(form.get("name") ?? "").trim().slice(0, 80);
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const relacion = String(form.get("relacion") ?? "").trim().slice(0, 40);
+  const valores = { name, email, relacion };
+
+  if (!name) return { error: textos.nuevo.errorNombre, campo: "name", valores };
+  if (!CORREO_VALIDO.test(email)) return { error: textos.nuevo.errorCorreo, campo: "email", valores };
+
+  const { data: todos, error: errLeer } = await s.supabase
+    .from("contacts")
+    .select("id, email, status")
+    .eq("issuer_id", s.user.id)
+    .neq("status", "removed");
+  if (errLeer) return { error: t.errorGuardar, valores };
+  const actual = todos.find((c) => c.id === id);
+  if (!actual) return { error: t.noExiste, valores };
+  if (todos.some((c) => c.id !== id && c.email.toLowerCase() === email)) return { error: textos.nuevo.errorRepetido, campo: "email", valores };
+
+  const cambiaCorreo = actual.email.toLowerCase() !== email;
+  if (cambiaCorreo) {
+    // Con una alerta en curso no se cambia a quién se avisa.
+    const { data: enAlerta } = await s.supabase.from("notices").select("id").eq("issuer_id", s.user.id).eq("state", "alert").limit(1);
+    if (enAlerta?.length) return { error: t.errorAlerta, campo: "email", valores };
+  }
+
+  const { token, hash } = nuevoToken();
+  const cambios = cambiaCorreo ? { name, email, status: "pending", accepted_at: null, invite_token_hash: hash } : { name };
+  const { error } = await s.supabase.from("contacts").update(cambios).eq("id", id).eq("issuer_id", s.user.id);
+  if (error) return { error: t.errorGuardar, valores };
+
+  await adaptadorExtras(s.supabase)
+    .guardarRelacion(s.user.id, id, relacion || null)
+    .catch((e) => console.error("[contactos] relación no guardada:", e instanceof Error ? e.message : e));
+
+  let destino = "/contactos?guardado=1";
+  if (cambiaCorreo) {
+    if (actual.status === "accepted") await apagarSinAceptados(s.supabase, s.user.id);
+    const enviado = await enviarInvitacion(s, { name, email }, token);
+    await anotarEnvio(s, id, enviado);
+    destino = enviado ? "/contactos?correo=1" : "/contactos?fallo=1";
+  }
+  revalidatePath("/contactos");
+  revalidatePath("/home");
+  redirect(destino);
 }

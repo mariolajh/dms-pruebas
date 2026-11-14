@@ -34,7 +34,7 @@ const COMUNES = {
   estoyBien: "Estoy bien",
   podrasConfirmar: "Podrás confirmar desde las {hora}",
   encendido: "Aviso encendido",
-  apagadoListo: "Aviso apagado",
+  apagadoListo: "Aviso apagado. Puedes encenderlo cuando quieras.",
   encendiendo: "Encendiendo tu aviso…",
   apagando: "Apagando tu aviso…",
   unMomento: "Un momento, por favor.",

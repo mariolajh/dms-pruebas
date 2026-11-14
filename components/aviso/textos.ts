@@ -24,7 +24,7 @@ const COMUNES = {
     mensaje: "Mensaje para tus contactos",
     opcional: "(opcional)",
     mensajeAyuda: "Lo reciben con la alerta, solo si no confirmas a tiempo.",
-    mensajeEjemplo: "Ejemplo: «Estaré en casa de mi hermana».",
+    mensajeEjemplo: "Ejemplo: \"Estaré en casa de mi hermana\".",
     // Errores que el diseño no cubre (pendientes de revisar con diseño).
     errorDias: "Elige al menos un día.",
     errorGracia: "Elige entre 15 min y 24 h.",

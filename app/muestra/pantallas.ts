@@ -24,6 +24,7 @@ export const GRUPOS: Grupo[] = [
     texto: "Lo que ve quien emite antes y después de que el contacto responda.",
     pantallas: [
       { id: "agregar-contacto", titulo: "Agregar contacto", nota: "De aquí sale el correo de invitación." },
+      { id: "editar-contacto", titulo: "Editar contacto", nota: "Si cambia el correo, sale una invitación nueva y vuelve a En espera." },
       { id: "contactos-en-espera", titulo: "Contactos · En espera", nota: "Invitación enviada, sin respuesta." },
       { id: "contactos-acepto", titulo: "Contactos · Aceptó", nota: "Ana aceptó. Luis sigue en espera." },
       { id: "contactos-no-acepto", titulo: "Contactos · No aceptó", nota: "Se propone invitar a otra persona." },

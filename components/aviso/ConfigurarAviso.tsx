@@ -545,7 +545,7 @@ export default function ConfigurarAviso({
 const claseSegmento =
   "flex min-h-12 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface px-2 text-center font-medium has-[:checked]:bg-brand-primary has-[:checked]:text-brand-on-primary has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-primary";
 
-function Segmentado({
+export function Segmentado({
   name,
   valor,
   onChange,

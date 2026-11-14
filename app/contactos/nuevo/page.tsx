@@ -6,7 +6,7 @@ import FormContacto from "@/components/contactos/FormContacto";
 import { avisoActual, exigirSesion } from "@/app/aviso/_datos/sesion";
 
 export async function generateMetadata() {
-  return { title: textosContactos(getBrand().variant).nuevo.titulo };
+  return { title: textosContactos(getBrand().variant).nuevo.tituloFuera };
 }
 
 export default async function ContactoNuevo() {
