@@ -79,7 +79,9 @@ const COMUNES = {
     segundoTitulo: "Agrega un segundo contacto",
     // {nombre} es el único contacto de la lista.
     segundoTexto: "Si {nombre} no responde, avisaremos a otra persona de confianza.",
-    otraPersonaTitulo: "Invita a otra persona",
+    // Un solo contacto y ya aceptó: advertencia con todo el texto desplegado (decisión de Mariola, 14/11).
+    soloUnoTexto: "Hoy tu aviso depende solo de {nombre}. Si no ve el correo a tiempo, nadie más se entera. Con dos contactos, avisamos al siguiente. Puedes tener hasta 5.",
+    otraPersonaTitulo:"Invita a otra persona",
     otraPersonaTexto: "{nombre} no aceptó. Necesitas al menos un contacto que acepte para encender tu aviso.",
     continuar: "Continuar",
     reenviar: "Reenviar invitación",

@@ -23,6 +23,15 @@ function Mas() {
   );
 }
 
+function IconoInfo() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 8h.01" />
+    </svg>
+  );
+}
+
 function Icono({ tipo }: { tipo: "espera" | "ok" | "no" }) {
   const trazo = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" } as const;
   return (
@@ -90,9 +99,11 @@ export default function ListaContactos({
       ? { titulo: t.primeroTitulo, texto: undefined }
       : unico?.status === "rejected"
         ? { titulo: t.otraPersonaTitulo, texto: rellenar(t.otraPersonaTexto, { nombre: unico.name }) }
-        : unico
-          ? { titulo: t.segundoTitulo, texto: rellenar(t.segundoTexto, { nombre: unico.name }) }
-          : undefined;
+        : unico?.status === "accepted"
+          ? { titulo: t.segundoTitulo, texto: rellenar(t.soloUnoTexto, { nombre: unico.name }), info: true }
+          : unico
+            ? { titulo: t.segundoTitulo, texto: rellenar(t.segundoTexto, { nombre: unico.name }) }
+            : undefined;
 
   return (
     <Pantalla pie={enAlta ? pieAlta : undefined} nav={enAlta ? undefined : <BarraNavegacion t={nav} actual="contactos" />}>
@@ -157,9 +168,12 @@ export default function ListaContactos({
       {/* Con 2 o más contactos el botón va suelto bajo la lista. Con 0 o 1 va dentro de la tarjeta que invita a agregar. */}
       {!enAlta && puedeAgregar && tarjetaAgregar && (
         <section className="space-y-3 rounded-xl bg-surface p-4">
-          <h2 className="font-semibold">{tarjetaAgregar.titulo}</h2>
+          <div className="flex items-center gap-2">
+            {"info" in tarjetaAgregar && tarjetaAgregar.info && <IconoInfo />}
+            <h2 className="font-semibold">{tarjetaAgregar.titulo}</h2>
+          </div>
           {tarjetaAgregar.texto && <p className="text-text-muted">{tarjetaAgregar.texto}</p>}
-          <EnlaceBoton href="/contactos/nuevo" tipo="secundario">
+          <EnlaceBoton href="/contactos/nuevo" tipo={"info" in tarjetaAgregar && tarjetaAgregar.info ? "principal" : "secundario"}>
             <Mas />
             {t.agregar}
           </EnlaceBoton>
