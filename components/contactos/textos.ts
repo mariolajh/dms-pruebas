@@ -37,8 +37,19 @@ const COMUNES = {
     enviadaEl: "Invitación enviada",
     aceptoEl: "Aceptó",
     rechazo: "Rechazó la invitación",
-    agregar: "Agregar otro contacto",
-    agregarPrimero: "Agregar contacto",
+    // E-05 del wireflow: título "Contactos", botón "Agregar contacto" en singular.
+    tituloPantalla: "Contactos",
+    agregar: "Agregar contacto",
+    agregarOtro: "Agregar otro contacto", // en el alta, junto a "Continuar"
+    estadoEspera: "En espera",
+    estadoAcepto: "Aceptó",
+    estadoNoAcepto: "No aceptó",
+    primeroTitulo: "Agrega tu primer contacto",
+    segundoTitulo: "Agrega un segundo contacto",
+    // {nombre} es el único contacto de la lista.
+    segundoTexto: "Si {nombre} no responde, avisaremos a otra persona de confianza.",
+    otraPersonaTitulo: "Invita a otra persona",
+    otraPersonaTexto: "{nombre} no aceptó. Necesitas al menos un contacto que acepte para encender tu aviso.",
     continuar: "Continuar",
     reenviar: "Reenviar invitación",
     reenviando: "Reenviando…",
