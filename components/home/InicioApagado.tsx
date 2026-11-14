@@ -20,7 +20,6 @@ export default function InicioApagado({
   sinEnviar,
   vacio,
   aceptados,
-  seApago,
   plazo,
   apagadoAhora,
 }: {
@@ -32,7 +31,6 @@ export default function InicioApagado({
   sinEnviar: string[];
   vacio: boolean;
   aceptados: string[];
-  seApago: boolean;
   plazo: { fireAt: string; frecuencia: Frecuencia; dias: number[] };
   apagadoAhora: boolean;
 }) {
@@ -43,12 +41,6 @@ export default function InicioApagado({
         {apagadoAhora && <Toast texto={t.apagadoListo} quitarParametro="apagado" />}
         <Encabezado nombre={app} />
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>
-        {seApago && !hayAceptado && (
-          <section role="status" className="space-y-1 rounded-xl border border-border bg-surface p-4">
-            <h2 className="font-semibold">{t.seApago}</h2>
-            <p className="text-text-muted">{t.seApagoTexto}</p>
-          </section>
-        )}
         <Tarjeta>
           {/* Orden de lectura: primero el estado y el título, después "Editar". */}
           <div className="flex items-center justify-between gap-2">

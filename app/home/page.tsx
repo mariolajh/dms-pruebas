@@ -62,14 +62,6 @@ export default async function HomePage({
       .catch(() => ({}) as Record<string, DatosContacto>);
     const enviada = (c: { id: string }) => !!extras[c.id]?.invitacionEnviadaEn;
     const aceptados = contactos.filter((c) => c.status === "accepted").map((c) => primerNombre(c.name));
-    // "Tu aviso se apagó" (E-22): sin aceptados y alguien que sí había aceptado ya no está.
-    const { data: bajas } = await supabase
-      .from("contacts")
-      .select("id")
-      .eq("issuer_id", user.id)
-      .eq("status", "removed")
-      .not("accepted_at", "is", null)
-      .limit(1);
     const extrasAviso = await adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null);
     return (
       <InicioApagado
@@ -77,7 +69,6 @@ export default async function HomePage({
         app={brand.name}
         nombre={primerNombre(profile?.full_name ?? "")}
         aceptados={aceptados}
-        seApago={(bajas?.length ?? 0) > 0}
         apagadoAhora={apagado === "1"}
         plazo={{ fireAt: aviso.fire_at, frecuencia: aviso.recurrence as Frecuencia, dias: extrasAviso?.dias ?? [] }}
         pendientes={contactos.filter((c) => c.status === "pending" && enviada(c)).map((c) => primerNombre(c.name))}

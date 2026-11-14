@@ -46,14 +46,9 @@ const COMUNES = {
   apagarPregunta: "¿Quieres apagar tu aviso?",
   apagarTexto: "Mientras esté apagado no avisaremos a nadie. Puedes encenderlo otra vez cuando quieras.",
   apagarBoton: "Apagar aviso",
-  apagarEditarPregunta: "¿Apagar tu aviso para editarlo?",
-  apagarEditarTexto: "Mientras esté encendido no se puede cambiar. Después de editarlo, vuelve a encenderlo.",
-  apagarEditarBoton: "Apagar y editar",
+  editarDesactivado: "Para editarlo, apaga primero tu aviso.",
   dejarActivo: "Dejarlo activo",
   noSePuedeApagar: "No puedes apagar el aviso mientras esperamos tu confirmación.",
-  // Aviso que se apaga solo (E-22 · Último contacto se va).
-  seApago: "Tu aviso se apagó",
-  seApagoTexto: "Ya no tienes contactos que hayan aceptado. Agrega uno para volver a encenderlo.",
   encender: {
     error: "No pudimos encender tu aviso. Revisa tu conexión e inténtalo otra vez.",
     yaEncendido: "Tu aviso ya está encendido.",

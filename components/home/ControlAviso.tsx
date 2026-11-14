@@ -10,10 +10,11 @@ import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import type { TextosInicio } from "./textosInicio";
 
 // Interruptor para encender y apagar el aviso (E-02 Apagado y Activo, E-12 y E-14 del wireflow).
-// Encender: sin diálogo (nota del flujo). Apagar: pide confirmar. "Editar" con el aviso encendido
-// pide apagarlo primero (solo se edita apagado). Los errores no se esconden: "Reintentar".
+// Encender: sin diálogo (nota del flujo). Apagar: pide confirmar. "Editar" no vive aquí: es un botón
+// aparte que está desactivado con el aviso encendido y se activa al apagarlo (decisión de Mariola 14/11).
+// Los errores no se esconden: "Reintentar".
 
-type Fase = "reposo" | "enviando" | "error" | "confirmando" | "confirmandoEditar";
+type Fase = "reposo" | "enviando" | "error" | "confirmando";
 
 export default function ControlAviso({
   t,
@@ -21,14 +22,12 @@ export default function ControlAviso({
   fireAt,
   frecuencia,
   dias,
-  conEditar = false,
 }: {
   t: TextosInicio;
   encendido: boolean;
   fireAt: string;
   frecuencia: Frecuencia;
   dias: number[];
-  conEditar?: boolean;
 }) {
   const router = useRouter();
   const [fase, setFase] = useState<Fase>("reposo");
@@ -37,7 +36,6 @@ export default function ControlAviso({
   const [bloqueado, setBloqueado] = useState(false);
   const aviso = useRef<HTMLDivElement>(null);
   const pregunta = useRef<HTMLParagraphElement>(null);
-  const [irAEditar, setIrAEditar] = useState(false);
 
   // Mientras se espera la confirmación no se puede apagar (ventana antes de la hora y tiempo de gracia).
   useEffect(() => {
@@ -48,7 +46,7 @@ export default function ControlAviso({
   }, [encendido, fireAt]);
 
   useEffect(() => {
-    if (fase === "confirmando" || fase === "confirmandoEditar") pregunta.current?.focus();
+    if (fase === "confirmando") pregunta.current?.focus();
     if (fase === "error") aviso.current?.focus();
   }, [fase]);
 
@@ -83,15 +81,11 @@ export default function ControlAviso({
   function apagar() {
     setFase("enviando");
     setError(null);
-    const paraEditar = irAEditar;
     empezar(async () => {
       const r = await apagarAviso().catch(() => ({ ok: false as const, error: t.apagar.error }));
       if (r.ok) {
-        if (paraEditar) router.push("/aviso");
-        else {
-          router.replace("/home?apagado=1");
-          router.refresh();
-        }
+        router.replace("/home?apagado=1");
+        router.refresh();
       } else {
         setError(r.error);
         setFase("error");
@@ -101,16 +95,12 @@ export default function ControlAviso({
 
   function alternar() {
     if (!encendido) encender();
-    else {
-      setIrAEditar(false);
-      setFase("confirmando");
-    }
+    else setFase("confirmando");
   }
 
   const ocupado = fase === "enviando";
   const etiqueta = encendido ? t.tocaApagar : t.tocaEncender;
-  const dialogo = fase === "confirmando" || fase === "confirmandoEditar";
-  const paraEditar = fase === "confirmandoEditar";
+  const dialogo = fase === "confirmando";
 
   return (
     <div className="space-y-3">
@@ -143,12 +133,12 @@ export default function ControlAviso({
       {dialogo && (
         <div className="space-y-2 rounded-lg border-2 border-border bg-surface-muted p-3" role="group" aria-labelledby="pregunta-apagar">
           <p id="pregunta-apagar" ref={pregunta} tabIndex={-1} className="font-semibold">
-            {paraEditar ? t.apagarEditarPregunta : t.apagarPregunta}
+            {t.apagarPregunta}
           </p>
-          <p className="text-sm text-text-muted">{paraEditar ? t.apagarEditarTexto : t.apagarTexto}</p>
+          <p className="text-sm text-text-muted">{t.apagarTexto}</p>
           <div className="flex flex-col gap-2">
             <button type="button" className={clases.principal} onClick={apagar}>
-              {paraEditar ? t.apagarEditarBoton : t.apagarBoton}
+              {t.apagarBoton}
             </button>
             <button type="button" className={clases.secundario} onClick={() => setFase("reposo")}>
               {t.dejarActivo}
@@ -178,18 +168,6 @@ export default function ControlAviso({
             <p id="no-se-puede-apagar" className="text-sm text-text-muted">
               {t.noSePuedeApagar}
             </p>
-          )}
-          {encendido && conEditar && !bloqueado && (
-            <button
-              type="button"
-              className={clases.enlace}
-              onClick={() => {
-                setIrAEditar(true);
-                setFase("confirmandoEditar");
-              }}
-            >
-              {t.editar}
-            </button>
           )}
         </>
       )}
