@@ -4,44 +4,53 @@ import type { Variant } from "@/lib/brand";
 // El texto y el diseño definitivos son del flujo de quien recibe (Luna).
 // PRD 12/11: dice con claridad quién invita y explica qué es y qué no es ser contacto.
 // Tuteo neutro; sin "emergencia", "peligro" ni "muerte".
+// Marcadores: {quien} = nombre completo (solo en el título), {nombre} = primer nombre, {app}.
 
 const COMUNES = {
+  pestana: "Invitación",
   de: "Invitación de",
   titulo: "{quien} te invita a ser su contacto de confianza",
-  intro: "{quien} usa {app} para confirmar cada cierto tiempo que está bien. Si un día no lo hace, te avisamos a ti.",
+  intro: "{nombre} usa {app} para confirmar cada cierto tiempo que está bien. Si un día no lo hace, te avisamos a ti.",
   esTitulo: "Qué es ser contacto",
   es: [
-    "Recibes un aviso por correo solo si {quien} no confirma a tiempo.",
-    "Puedes escribirle o llamarle para saber cómo está.",
+    // Sin "solo": también llegan esta invitación y el aviso de que todo se resolvió.
+    "Te avisamos por correo si {nombre} no confirma a tiempo.",
+    // R4: la alerta trae botones para llamar y escribir a quien emite.
+    "Puedes llamarle o escribirle para saber cómo está.",
     "Puedes dejar de serlo cuando quieras.",
   ],
   noEsTitulo: "Qué no es",
   noEs: [
-    "No recibes nada mientras {quien} esté bien.",
+    "No recibes avisos mientras {nombre} esté bien.",
+    // PENDIENTE DE CONFIRMAR con el equipo: deducido de "nada compartido por defecto".
     "No ves sus datos ni dónde está.",
     "No tienes que instalar nada ni crear una cuenta.",
   ],
   aceptar: "Aceptar",
   rechazar: "No, gracias",
-  pie: "Puedes decidir ahora o más tarde: no pasa nada si no respondes.",
+  pie: "Puedes responder más tarde con este mismo enlace.",
+  confirmarRechazo: {
+    titulo: "¿Rechazar la invitación de {nombre}?",
+    texto: "No te avisaremos si {nombre} no confirma. {nombre} verá que la rechazaste.",
+    si: "Sí, rechazar",
+    no: "Volver a la invitación",
+  },
   aceptada: {
-    titulo: "Listo, ya eres su contacto",
-    texto: "Le avisamos a {quien}. Si algún día hace falta, te escribiremos a este correo.",
-    push: "Por ahora te avisaremos por correo.",
+    titulo: "Listo, ya eres contacto de {nombre}",
+    texto: "Si algún día hace falta, te escribiremos a este correo.",
     baja: "Dejar de ser su contacto",
   },
   rechazada: {
-    titulo: "Has rechazado la invitación",
-    texto: "Le avisamos a {quien}. No recibirás nada más.",
+    titulo: "Rechazaste la invitación",
+    texto: "No recibirás avisos de {nombre}.",
   },
-  yaAceptada: "Ya aceptaste esta invitación. No tienes que hacer nada más.",
-  yaRechazada: "Ya rechazaste esta invitación.",
   baja: {
-    titulo: "¿Dejar de ser contacto de {quien}?",
-    texto: "No recibirás más avisos suyos. {quien} se entera y puede invitarte de nuevo si quiere.",
+    pestana: "Dejar de ser contacto",
+    titulo: "¿Dejar de ser contacto de {nombre}?",
+    texto: "No recibirás más avisos suyos. {nombre} puede invitarte de nuevo si quiere.",
     confirmar: "Dejar de ser contacto",
-    volver: "Mantenerme como contacto",
-    hecho: "Ya no eres contacto de {quien}",
+    volver: "Seguir siendo su contacto",
+    hecho: "Ya no eres contacto de {nombre}",
     hechoTexto: "No recibirás más avisos suyos.",
   },
   invalida: {

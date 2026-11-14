@@ -171,10 +171,13 @@ export default function ConfigurarAviso({
         ? t.hora.aDiario
         : capitalizar(listaNombres(DIAS.filter((d) => dias.includes(d.valor)).map((d) => d.nombre)));
 
-  const nombresElegidos = elegidos.map((c) => primerNombre(c.name));
+  // Solo se nombra a quien aceptó: no se promete un aviso que no llegaría.
+  const nombresElegidos = elegidos.filter((c) => c.accepted).map((c) => primerNombre(c.name));
   const textoOrden =
     nombresElegidos.length === 0
-      ? ""
+      ? elegidos.length > 0
+        ? t.contactos.nadieAcepto
+        : ""
       : nombresElegidos.length === 1
         ? rellenar(t.contactos.ordenUno, { primero: nombresElegidos[0] })
         : rellenar(t.contactos.ordenVarios, { primero: nombresElegidos[0], resto: listaNombres(nombresElegidos.slice(1)) });
@@ -382,7 +385,7 @@ export default function ConfigurarAviso({
         {cabecera}
         <Tarjeta titulo={t.contactos.titulo} id="titulo-contactos">
           {textoOrden && <p className="text-text-muted">{textoOrden}</p>}
-          {elegidos.some((c) => !c.accepted) && <p className="text-sm text-text-muted">{t.contactos.soloAceptados}</p>}
+          {nombresElegidos.length > 0 && elegidos.some((c) => !c.accepted) && <p className="text-sm text-text-muted">{t.contactos.soloAceptados}</p>}
           {opciones.length === 0 && (
             <>
               <p>{t.contactos.sinContactos}</p>
@@ -509,7 +512,12 @@ export default function ConfigurarAviso({
             <li key={c.id} className="flex items-start gap-3">
               <Numero n={i + 1} />
               <div className="min-w-0">
-                <p className="font-medium">{rellenar(i === 0 ? t.resumen.pasoPrimero : t.resumen.pasoSiguiente, { nombre: c.name })}</p>
+                {/* "Avisamos a…" solo para quien aceptó; del resto se muestra el nombre y por qué no recibe nada. */}
+                <p className="font-medium">
+                  {c.accepted
+                    ? rellenar(elegidos.findIndex((x) => x.accepted) === i ? t.resumen.pasoPrimero : t.resumen.pasoSiguiente, { nombre: c.name })
+                    : c.name}
+                </p>
                 <p className={`text-sm ${c.accepted ? "text-text-muted" : "font-medium"}`}>{c.accepted ? t.resumen.acepto : t.resumen.pendiente}</p>
               </div>
             </li>

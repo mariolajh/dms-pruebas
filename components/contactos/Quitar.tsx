@@ -6,7 +6,18 @@ import { clases } from "@/components/emisor/ui";
 import type { TextosContactos } from "./textos";
 
 // E5 · Quitar un contacto. Acción que no se deshace sola: pide confirmar en el mismo sitio.
-export default function Quitar({ contactId, nombre, t }: { contactId: string; nombre: string; t: TextosContactos["lista"] }) {
+export default function Quitar({
+  contactId,
+  nombre,
+  estado: estadoContacto,
+  t,
+}: {
+  contactId: string;
+  nombre: string;
+  estado: "pending" | "accepted" | "rejected";
+  t: TextosContactos["lista"];
+}) {
+  const consecuencia = estadoContacto === "accepted" ? t.quitarAceptado : estadoContacto === "pending" ? t.quitarPendiente : t.quitarRechazado;
   const [estado, accion, enviando] = useActionState<EstadoQuitar, FormData>(quitarContacto, {});
   const [abierto, setAbierto] = useState(false);
   const pregunta = useRef<HTMLParagraphElement>(null);
@@ -30,7 +41,7 @@ export default function Quitar({ contactId, nombre, t }: { contactId: string; no
       <p ref={pregunta} tabIndex={-1} className="font-semibold">
         {t.quitarPregunta.replace("{nombre}", nombre)}
       </p>
-      <p className="text-sm text-text-muted">{t.quitarAviso}</p>
+      <p className="text-sm text-text-muted">{consecuencia}</p>
       {estado.error && (
         <p role="alert" className={clases.error}>
           {estado.error}

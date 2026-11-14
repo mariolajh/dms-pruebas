@@ -100,7 +100,7 @@ export default async function Contactos({
                 {c.status === "rejected" && <p className="text-sm font-medium">{t.rechazo}</p>}
                 <div className="flex flex-wrap items-start gap-x-6">
                   {c.status === "pending" && <Reenviar contactId={c.id} nombre={c.name} sinEnviar={!enviadaEn} t={t} />}
-                  <Quitar contactId={c.id} nombre={c.name} t={t} />
+                  <Quitar contactId={c.id} nombre={c.name} estado={c.status as "pending" | "accepted" | "rejected"} t={t} />
                 </div>
               </li>
             );

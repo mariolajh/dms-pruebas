@@ -51,7 +51,10 @@ const COMUNES = {
     enviarAhora: "Enviar invitación",
     quitar: "Quitar",
     quitarPregunta: "¿Quitar a {nombre} de tus contactos?",
-    quitarAviso: "Ya no le avisaremos si no confirmas. Podrás invitarle de nuevo.",
+    // Una frase por estado: lo que se pierde al quitar no es lo mismo en cada caso.
+    quitarAceptado: "Ya no le avisaremos si no confirmas a tiempo.",
+    quitarPendiente: "La invitación que le enviaste dejará de valer.",
+    quitarRechazado: "Saldrá de tu lista y dejará su sitio libre.",
     quitarSi: "Sí, quitar",
     quitarNo: "Cancelar",
     quitando: "Quitando…",

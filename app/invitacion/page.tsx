@@ -3,15 +3,33 @@ import Link from "next/link";
 import { getBrand } from "@/lib/brand";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { con, textosInvitacion } from "@/components/invitacion/textos";
-import { Pantalla, Tarjeta, clases } from "@/components/emisor/ui";
+import { Pantalla, clases } from "@/components/emisor/ui";
+import { primerNombre } from "@/app/aviso/_datos/formato";
 import { responderInvitacion } from "./actions";
 
-// R1 · Pantalla que ve quien recibe la invitación (sin cuenta, sin sesión).
+// R1 · Pantalla que ve quien recibe la invitación (sin cuenta, sin sesión, sin menú).
 // PROVISIONAL: versión de prueba. El diseño definitivo es del flujo de quien recibe.
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata() {
+  return { title: textosInvitacion(getBrand().variant).pestana, robots: { index: false } };
+}
+
 function Marca({ nombre }: { nombre: string }) {
-  return <p className="text-sm font-semibold tracking-wide text-text-muted">{nombre}</p>;
+  return <p className="pt-2 text-sm font-semibold tracking-wide text-text-muted">{nombre}</p>;
+}
+
+// Pantalla de un solo mensaje (enlace caducado, ya aceptada, ya rechazada).
+function Mensaje({ marca, titulo, children }: { marca: string; titulo: string; children: React.ReactNode }) {
+  return (
+    <Pantalla>
+      <Marca nombre={marca} />
+      <section className="space-y-3 rounded-xl bg-surface p-4">
+        <h1 className="text-xl font-bold">{titulo}</h1>
+        {children}
+      </section>
+    </Pantalla>
+  );
 }
 
 function Lista({ titulo, lineas, tipo }: { titulo: string; lineas: string[]; tipo: "si" | "no" }) {
@@ -23,7 +41,7 @@ function Lista({ titulo, lineas, tipo }: { titulo: string; lineas: string[]; tip
           <li key={l} className="flex items-start gap-3">
             <span
               aria-hidden="true"
-              className={`mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full ${tipo === "si" ? "bg-success text-brand-on-primary" : "bg-surface-muted text-text border border-border"}`}
+              className={`mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full ${tipo === "si" ? "bg-success text-brand-on-primary" : "border border-border bg-surface-muted text-text"}`}
             >
               <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 {tipo === "si" ? <path d="M5 12l5 5 9-10" /> : <path d="M6 12h12" />}
@@ -37,18 +55,15 @@ function Lista({ titulo, lineas, tipo }: { titulo: string; lineas: string[]; tip
   );
 }
 
-export default async function Invitacion({ searchParams }: { searchParams: Promise<{ token?: string; error?: string }> }) {
-  const { token, error } = await searchParams;
+export default async function Invitacion({ searchParams }: { searchParams: Promise<{ token?: string; error?: string; rechazar?: string }> }) {
+  const { token, error, rechazar } = await searchParams;
   const brand = getBrand();
   const t = textosInvitacion(brand.variant);
 
   const invalida = (
-    <Pantalla>
-      <Marca nombre={brand.name} />
-      <Tarjeta titulo={t.invalida.titulo} id="invalida">
-        <p>{t.invalida.texto}</p>
-      </Tarjeta>
-    </Pantalla>
+    <Mensaje marca={brand.name} titulo={t.invalida.titulo}>
+      <p>{t.invalida.texto}</p>
+    </Mensaje>
   );
   if (!token) return invalida;
 
@@ -56,9 +71,9 @@ export default async function Invitacion({ searchParams }: { searchParams: Promi
   if (!admin) {
     return (
       <Pantalla>
-        <Tarjeta>
-          <p role="alert">{t.sinConfigurar}</p>
-        </Tarjeta>
+        <p role="alert" className="rounded-xl bg-surface p-4">
+          {t.sinConfigurar}
+        </p>
       </Pantalla>
     );
   }
@@ -73,29 +88,46 @@ export default async function Invitacion({ searchParams }: { searchParams: Promi
 
   const { data: perfil } = await admin.from("profiles").select("full_name").eq("id", contacto.issuer_id).maybeSingle();
   const quien = perfil?.full_name?.trim() || "Una persona";
-  const v = { quien, app: brand.name };
+  const v = { quien, nombre: primerNombre(quien), app: brand.name };
+  const enlace = `/invitacion?token=${encodeURIComponent(token)}`;
 
   if (contacto.status === "accepted") {
     return (
-      <Pantalla>
-        <Marca nombre={brand.name} />
-        <Tarjeta titulo={t.aceptada.titulo} id="aceptada">
-          <p>{con(t.aceptada.texto, v)}</p>
-          <p className="text-text-muted">{t.aceptada.push}</p>
-          <Link href={`/baja?token=${encodeURIComponent(token)}`} className={clases.enlace}>
-            {t.aceptada.baja}
-          </Link>
-        </Tarjeta>
-      </Pantalla>
+      <Mensaje marca={brand.name} titulo={con(t.aceptada.titulo, v)}>
+        <p>{t.aceptada.texto}</p>
+        <Link href={`/baja?token=${encodeURIComponent(token)}`} className={clases.enlace}>
+          {t.aceptada.baja}
+        </Link>
+      </Mensaje>
     );
   }
   if (contacto.status === "rejected") {
     return (
-      <Pantalla>
+      <Mensaje marca={brand.name} titulo={t.rechazada.titulo}>
+        <p>{con(t.rechazada.texto, v)}</p>
+      </Mensaje>
+    );
+  }
+
+  // Rechazar no se deshace: se confirma en una pantalla aparte antes de guardar nada.
+  if (rechazar) {
+    return (
+      <Pantalla
+        pie={
+          <form action={responderInvitacion} className="space-y-2">
+            <input type="hidden" name="token" value={token} />
+            <button type="submit" name="decision" value="rejected" className={clases.principal}>
+              {t.confirmarRechazo.si}
+            </button>
+            <Link href={enlace} className={clases.secundario}>
+              {t.confirmarRechazo.no}
+            </Link>
+          </form>
+        }
+      >
         <Marca nombre={brand.name} />
-        <Tarjeta titulo={t.rechazada.titulo} id="rechazada">
-          <p>{con(t.rechazada.texto, v)}</p>
-        </Tarjeta>
+        <h1 className="text-xl font-bold">{con(t.confirmarRechazo.titulo, v)}</h1>
+        <p>{con(t.confirmarRechazo.texto, v)}</p>
       </Pantalla>
     );
   }
@@ -113,9 +145,9 @@ export default async function Invitacion({ searchParams }: { searchParams: Promi
           <button type="submit" name="decision" value="accepted" className={clases.principal}>
             {t.aceptar}
           </button>
-          <button type="submit" name="decision" value="rejected" className={clases.secundario}>
+          <Link href={`${enlace}&rechazar=1`} className={clases.secundario}>
             {t.rechazar}
-          </button>
+          </Link>
           <p className="pt-1 text-center text-sm text-text-muted">{t.pie}</p>
         </form>
       }
@@ -127,7 +159,7 @@ export default async function Invitacion({ searchParams }: { searchParams: Promi
           <span aria-hidden="true" className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-primary text-xl font-bold text-brand-on-primary">
             {quien[0]?.toUpperCase()}
           </span>
-          <p className="text-xl font-bold leading-snug">{con(t.titulo, v)}</p>
+          <h1 className="text-xl font-bold leading-snug">{con(t.titulo, v)}</h1>
         </div>
         <p>{con(t.intro, v)}</p>
       </div>
