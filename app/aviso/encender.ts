@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Client } from "@upstash/qstash";
 import { getBrand } from "@/lib/brand";
 import { textosInicio } from "@/components/home/textosInicio";
 import { CONFIG_EMISOR } from "./_datos/config";
@@ -49,8 +50,55 @@ export async function encenderAviso(fireAt: string): Promise<ResultadoEstado> {
     .eq("state", "off");
   if (error) return falla();
 
+  // Programar el disparo en QStash (llamará a /api/alert a la hora del aviso). Un aviso encendido sin
+  // disparo no avisaría nunca: si no se puede programar, se vuelve a apagar y se dice.
+  const programado = await programar(aviso.id, fire);
+  if (!programado.ok) {
+    await s.supabase.from("notices").update({ state: "off", qstash_message_id: null, updated_at: new Date().toISOString() }).eq("id", aviso.id);
+    return falla();
+  }
+  if (programado.messageId) {
+    await s.supabase.from("notices").update({ qstash_message_id: programado.messageId }).eq("id", aviso.id);
+  }
+
   revalidatePath("/home");
   return { ok: true };
+}
+
+// Sin QSTASH_TOKEN: en desarrollo se sigue sin programar (se avisa en el terminal); en producción falla.
+async function programar(noticeId: string, fire: Date): Promise<{ ok: true; messageId: string | null } | { ok: false }> {
+  const token = process.env.QSTASH_TOKEN;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!token || !appUrl) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[encender] faltan QSTASH_TOKEN o NEXT_PUBLIC_APP_URL");
+      return { ok: false };
+    }
+    console.warn("[encender] SIN QSTASH_TOKEN: el aviso queda encendido pero no se programó ningún disparo.");
+    return { ok: true, messageId: null };
+  }
+  try {
+    const qstash = new Client({ token, baseUrl: process.env.QSTASH_URL });
+    const res = await qstash.publishJSON({
+      url: `${appUrl}/api/alert`,
+      body: { notice_id: noticeId },
+      notBefore: Math.floor(fire.getTime() / 1000),
+    });
+    return { ok: true, messageId: "messageId" in res ? res.messageId : null };
+  } catch (e) {
+    console.error("[encender] QStash falló:", e instanceof Error ? e.message : e);
+    return { ok: false };
+  }
+}
+
+async function cancelarProgramado(messageId: string | null) {
+  const token = process.env.QSTASH_TOKEN;
+  if (!token || !messageId) return;
+  try {
+    await new Client({ token, baseUrl: process.env.QSTASH_URL }).messages.delete(messageId);
+  } catch {
+    // Si ya se disparó o no existe, seguimos: /api/alert ignora los avisos que no están activos.
+  }
 }
 
 export async function apagarAviso(): Promise<ResultadoEstado> {
@@ -59,7 +107,7 @@ export async function apagarAviso(): Promise<ResultadoEstado> {
 
   const { data: aviso, error: errA } = await s.supabase
     .from("notices")
-    .select("id, state, fire_at")
+    .select("id, state, fire_at, qstash_message_id")
     .eq("issuer_id", s.user.id)
     .in("state", ["active", "alert"])
     .maybeSingle();
@@ -73,10 +121,11 @@ export async function apagarAviso(): Promise<ResultadoEstado> {
 
   const { error } = await s.supabase
     .from("notices")
-    .update({ state: "off", updated_at: new Date().toISOString() })
+    .update({ state: "off", qstash_message_id: null, updated_at: new Date().toISOString() })
     .eq("id", aviso.id)
     .eq("state", "active");
   if (error) return { ok: false, error: t.error };
+  await cancelarProgramado(aviso.qstash_message_id as string | null);
 
   revalidatePath("/home");
   return { ok: true };

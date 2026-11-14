@@ -169,7 +169,7 @@ export default function ControlAviso({
               onClick={alternar}
               className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border-2 border-text bg-surface transition-colors disabled:opacity-60 aria-checked:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
             >
-              <span aria-hidden="true" className={`size-5 rounded-full bg-text transition-transform ${encendido ? "translate-x-7 bg-surface" : "translate-x-1"}`} />
+              <span aria-hidden="true" className={`size-5 rounded-full transition-transform ${encendido ? "translate-x-7 bg-surface" : "translate-x-1 bg-text"}`} />
               <span className="sr-only">{etiqueta}</span>
             </button>
             <span className="text-sm">{etiqueta}</span>
