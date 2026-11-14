@@ -10,6 +10,8 @@ import { textosHome } from "@/components/home/textos";
 import { textosInicio } from "@/components/home/textosInicio";
 import InicioApagado from "@/components/home/InicioApagado";
 import { avisoActual } from "@/app/aviso/_datos/sesion";
+import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
+import type { DatosContacto } from "@/app/aviso/_datos/tipos";
 import { primerNombre } from "@/app/aviso/_datos/formato";
 
 // Sin aviso o con el aviso apagado: pantallas del flujo de quien emite (onboarding / Inicio apagado).
@@ -46,19 +48,26 @@ export default async function HomePage({
   if (aviso.state === "off") {
     const { data: filas } = await supabase
       .from("notice_contacts")
-      .select("position, contacts(name, status)")
+      .select("position, contacts(id, name, status)")
       .eq("notice_id", aviso.id)
       .order("position");
     const contactos = (filas ?? [])
-      .map((f) => (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { name: string; status: string } | null)
-      .filter((c): c is { name: string; status: string } => !!c && c.status !== "removed");
+      .map((f) => (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { id: string; name: string; status: string } | null)
+      .filter((c): c is { id: string; name: string; status: string } => !!c && c.status !== "removed");
+    // "Aún no responde" solo vale si la invitación salió. Si no salió, se dice eso.
+    const extras = await adaptadorExtras(supabase)
+      .leerContactos(user.id, contactos.map((c) => c.id))
+      .catch(() => ({}) as Record<string, DatosContacto>);
+    const enviada = (c: { id: string }) => !!extras[c.id]?.invitacionEnviadaEn;
     return (
       <InicioApagado
         t={textosInicio(brand.variant)}
         app={brand.name}
         nombre={primerNombre(profile?.full_name ?? "")}
         hayAceptado={contactos.some((c) => c.status === "accepted")}
-        pendientes={contactos.filter((c) => c.status === "pending").map((c) => primerNombre(c.name))}
+        pendientes={contactos.filter((c) => c.status === "pending" && enviada(c)).map((c) => primerNombre(c.name))}
+        sinEnviar={contactos.filter((c) => c.status === "pending" && !enviada(c)).map((c) => primerNombre(c.name))}
+        vacio={contactos.length === 0}
         rechazados={contactos.filter((c) => c.status === "rejected").map((c) => primerNombre(c.name))}
       />
     );

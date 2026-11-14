@@ -67,7 +67,7 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
 
   if (fase === "activas") {
     return (
-      <Pantalla pie={<EnlaceBoton href={SIGUIENTE}>{t.continuar}</EnlaceBoton>}>
+      <Pantalla pie={<EnlaceBoton href={SIGUIENTE}>{enAlta ? t.continuar : t.volverAjustes}</EnlaceBoton>}>
         {cabecera}
         <Tarjeta>
           <Badge>{t.activasBadge}</Badge>
@@ -89,7 +89,7 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
               {t.reintentar}
             </button>
             <EnlaceBoton href={SIGUIENTE} tipo="secundario">
-              {t.continuarSin}
+              {enAlta ? t.continuarSin : t.volverAjustes}
             </EnlaceBoton>
           </>
         }
@@ -106,7 +106,7 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
             </p>
           )}
         </Tarjeta>
-        <p className="text-sm text-text-muted">{t.noNota}</p>
+        {enAlta && <p className="text-sm text-text-muted">{t.noNota}</p>}
       </Pantalla>
     );
   }

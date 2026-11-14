@@ -14,12 +14,15 @@ const COMUNES = {
   podras: "Podrás encender tu aviso cuando al menos un contacto acepte.",
   aunNoUno: "{nombres} aún no responde.",
   aunNoVarios: "{nombres} aún no responden.",
+  noEnviadaUno: "La invitación de {nombres} no se envió. Envíala desde Contactos.",
+  noEnviadaVarios: "Las invitaciones de {nombres} no se enviaron. Envíalas desde Contactos.",
+  avisoSinContactos: "Tu aviso no tiene contactos. Edítalo para añadir al menos uno.",
   rechazoUno: "{nombres} rechazó la invitación.",
   rechazoVarios: "{nombres} rechazaron la invitación.",
   verContactos: "Ver contactos",
   titulo: "Inicio",
-  historial: { titulo: "Historial", vacio: "Aquí verás tus confirmaciones y alertas. Todavía no hay nada." },
-  ajustes: { titulo: "Ajustes", cuenta: "Tu cuenta", notificaciones: "Notificaciones", activar: "Activar notificaciones", pronto: "El resto de ajustes llegará pronto." },
+  historial: { titulo: "Historial", vacio: "Aquí verás tus confirmaciones y alertas. Esta pantalla todavía no está disponible." },
+  ajustes: { titulo: "Ajustes", cuenta: "Tu cuenta", notificaciones: "Notificaciones", activar: "Activar en este dispositivo", pronto: "El resto de ajustes llegará pronto." },
   nav: { inicio: "Inicio", contactos: "Contactos", historial: "Historial", ajustes: "Ajustes" },
 };
 

@@ -12,7 +12,7 @@ const COMUNES = {
   boton: "Estoy bien, cancelar alerta",
   // PRD 12/11 (E6): se explica arriba y en grande.
   ayudaMantener: "Mantén presionado el botón 2 segundos",
-  ayudaSuelta: "Si lo sueltas antes, no se cancela nada.",
+  ayudaSuelta: "Si lo sueltas antes, la alerta sigue en curso.",
   sigue: "Sigue presionando…",
   // Con teclado o lector de pantalla no se puede "mantener": se pulsa y se confirma.
   ayudaAsistida: "Con teclado o lector de pantalla: pulsa el botón y confirma.",

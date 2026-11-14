@@ -14,10 +14,10 @@ export default function Quitar({
 }: {
   contactId: string;
   nombre: string;
-  estado: "pending" | "accepted" | "rejected";
+  estado: "pending" | "sinEnviar" | "accepted" | "rejected";
   t: TextosContactos["lista"];
 }) {
-  const consecuencia = estadoContacto === "accepted" ? t.quitarAceptado : estadoContacto === "pending" ? t.quitarPendiente : t.quitarRechazado;
+  const consecuencia = estadoContacto === "accepted" ? t.quitarAceptado : estadoContacto === "pending" ? t.quitarPendiente : estadoContacto === "sinEnviar" ? t.quitarSinEnviar : t.quitarRechazado;
   const [estado, accion, enviando] = useActionState<EstadoQuitar, FormData>(quitarContacto, {});
   const [abierto, setAbierto] = useState(false);
   const pregunta = useRef<HTMLParagraphElement>(null);

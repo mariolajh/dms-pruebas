@@ -30,7 +30,8 @@ const COMUNES = {
     noTexto:
       "Sin ellas puede que no confirmes a tiempo y se avise a tus contactos. Actívalas desde los ajustes del teléfono.",
     noNota:
-      "Podrás activarlas después desde Ajustes. Mientras tanto, tu aviso empieza apagado y no podremos recordarte confirmar.",
+      "Podrás activarlas después desde Ajustes. Mientras tanto, no podremos recordarte confirmar.",
+    volverAjustes: "Volver a Ajustes",
     // PREGUNTA ABIERTA: el diseño dice "Abrir ajustes del teléfono", pero una web no puede abrir los ajustes.
     // Mientras se decide, el botón vuelve a pedir el permiso.
     reintentar: "Volver a intentarlo",

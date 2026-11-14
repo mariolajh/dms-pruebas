@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { getBrand } from "@/lib/brand";
+import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
 import { textosContactos } from "@/components/contactos/textos";
 import FormContacto from "@/components/contactos/FormContacto";
 import { avisoActual, exigirSesion } from "@/app/aviso/_datos/sesion";
@@ -19,6 +21,7 @@ export default async function ContactoNuevo() {
     avisoActual(s),
   ]);
   const total = count ?? 0;
+  if (total >= CONFIG_EMISOR.contactosMax) redirect("/contactos");
   // Sin aviso todavía = sigue en el onboarding.
   const enAlta = !aviso;
   const cancelarHref = total > 0 ? "/contactos" : enAlta ? "/alta/notificaciones" : "/home";

@@ -37,6 +37,7 @@ export default async function Aviso() {
     id: c.id,
     name: c.name,
     accepted: c.status === "accepted",
+    enviada: !!datosContactos[c.id]?.invitacionEnviadaEn,
     relacion: datosContactos[c.id]?.relacion ?? null,
   }));
 

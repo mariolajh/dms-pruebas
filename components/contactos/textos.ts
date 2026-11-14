@@ -41,9 +41,9 @@ const COMUNES = {
     continuar: "Continuar",
     reenviar: "Reenviar invitación",
     reenviando: "Reenviando…",
-    reenviada: "Invitación reenviada.",
+    reenviada: "Invitación reenviada",
     // El diseño no cubre que el correo falle. Nunca se dice "enviada" si no salió.
-    falloCorreo: "Guardamos el contacto, pero no pudimos enviarle la invitación por correo. Prueba a reenviarla.",
+    falloCorreo: "Guardamos el contacto, pero no pudimos enviarle la invitación por correo. Pulsa «Enviar invitación» para intentarlo de nuevo.",
     // Al reenviar. "Guardamos el contacto…" solo vale al crear uno nuevo.
     falloReenvio: "No pudimos reenviar la invitación. Inténtalo de nuevo.",
     yaRespondio: "Esta persona ya respondió a la invitación. Actualizamos la lista.",
@@ -54,6 +54,7 @@ const COMUNES = {
     // Una frase por estado: lo que se pierde al quitar no es lo mismo en cada caso.
     quitarAceptado: "Ya no le avisaremos si no confirmas a tiempo.",
     quitarPendiente: "La invitación que le enviaste dejará de valer.",
+    quitarSinEnviar: "Su invitación no llegó a enviarse.",
     quitarRechazado: "Saldrá de tu lista y dejará su sitio libre.",
     quitarSi: "Sí, quitar",
     quitarNo: "Cancelar",

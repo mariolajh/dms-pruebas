@@ -14,6 +14,8 @@ export default function InicioApagado({
   nombre,
   pendientes,
   rechazados,
+  sinEnviar,
+  vacio,
   hayAceptado,
 }: {
   t: TextosInicio;
@@ -21,6 +23,8 @@ export default function InicioApagado({
   nombre: string;
   pendientes: string[];
   rechazados: string[];
+  sinEnviar: string[];
+  vacio: boolean;
   hayAceptado: boolean;
 }) {
   return (
@@ -37,12 +41,16 @@ export default function InicioApagado({
             </Link>
           </div>
           <h2 className="text-lg font-semibold">{t.tuAviso}</h2>
-          {!hayAceptado && (
+          {vacio && <p className="font-medium">{t.avisoSinContactos}</p>}
+          {!hayAceptado && !vacio && (
             <p className="text-text-muted">
               {t.podras}{" "}
               {pendientes.length > 0 &&
                 rellenar(pendientes.length === 1 ? t.aunNoUno : t.aunNoVarios, { nombres: listaNombres(pendientes) })}
             </p>
+          )}
+          {sinEnviar.length > 0 && (
+            <p className="font-medium">{rellenar(sinEnviar.length === 1 ? t.noEnviadaUno : t.noEnviadaVarios, { nombres: listaNombres(sinEnviar) })}</p>
           )}
           {rechazados.length > 0 && (
             <p className="font-medium">{rellenar(rechazados.length === 1 ? t.rechazoUno : t.rechazoVarios, { nombres: listaNombres(rechazados) })}</p>

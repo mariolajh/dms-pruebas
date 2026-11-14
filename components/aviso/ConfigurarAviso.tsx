@@ -13,7 +13,8 @@ import { rellenar, type TextosAviso } from "./textos";
 // Todo el asistente vive en una sola pantalla de cliente y se guarda al final (apagado).
 // PRD 12/11 (R6): los "pasos a seguir" son los contactos en orden. Ya no se escriben a mano.
 
-export type ContactoOpcion = { id: string; name: string; accepted: boolean; relacion: string | null };
+// enviada: la invitación salió de verdad. Si no, la persona no "aún no responde": no le llegó nada.
+export type ContactoOpcion = { id: string; name: string; accepted: boolean; enviada: boolean; relacion: string | null };
 
 export type Inicial = {
   fireAt: string | null;
@@ -35,7 +36,6 @@ type Limites = {
 type Paso = "hora" | "contactos" | "resumen";
 
 const ORDEN: Paso[] = ["hora", "contactos", "resumen"];
-const PASOS_VISIBLES = 2;
 
 export default function ConfigurarAviso({
   t,
@@ -182,14 +182,16 @@ export default function ConfigurarAviso({
         ? rellenar(t.contactos.ordenUno, { primero: nombresElegidos[0] })
         : rellenar(t.contactos.ordenVarios, { primero: nombresElegidos[0], resto: listaNombres(nombresElegidos.slice(1)) });
 
-  const numero = enAlta ? 3 : ORDEN.indexOf(paso) + 1;
-  const total = enAlta ? 3 : PASOS_VISIBLES;
+  // "Paso n de 3" es SOLO el contador del alta: 1 notificaciones, 2 contactos, 3 aviso.
+  // Todo este asistente es el paso 3. Al editar un aviso ya creado no hay contador:
+  // un "Paso 1 de 2" aquí se confundiría con el paso 1 del alta.
+  const subtitulo = paso === "hora" ? t.hora.titulo : t.contactos.titulo;
   const cabecera = (
     <>
       <BarraTitulo titulo={paso === "resumen" ? t.resumen.titulo : t.titulo} onVolver={guardando ? undefined : atras} />
-      {paso !== "resumen" && <Progreso actual={numero} total={total} />}
+      {paso !== "resumen" && enAlta && <Progreso actual={3} total={3} />}
       <h2 ref={titulo} tabIndex={-1} className="sr-only">
-        {paso === "resumen" ? t.resumen.titulo : `${t.titulo}, paso ${numero} de ${total}`}
+        {paso === "resumen" ? t.resumen.titulo : enAlta ? `${t.titulo}, paso 3 de 3: ${subtitulo}` : `${t.titulo}: ${subtitulo}`}
       </h2>
     </>
   );
@@ -401,7 +403,7 @@ export default function ConfigurarAviso({
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{c.name}</p>
                   {c.relacion && <p className="text-sm text-text-muted">{c.relacion}</p>}
-                  {!c.accepted && <p className="text-sm font-medium">{t.contactos.pendiente}</p>}
+                  {!c.accepted && <p className="text-sm font-medium">{c.enviada ? t.contactos.pendiente : t.contactos.sinEnviar}</p>}
                   <button
                     type="button"
                     className={clases.enlace}
@@ -439,6 +441,7 @@ export default function ConfigurarAviso({
                   <li key={c.id} className="rounded-lg border border-border/50 p-3">
                     <p className="font-semibold">{c.name}</p>
                     {c.relacion && <p className="text-sm text-text-muted">{c.relacion}</p>}
+                    {!c.accepted && <p className="text-sm font-medium">{c.enviada ? t.contactos.pendiente : t.contactos.sinEnviar}</p>}
                     <button
                       type="button"
                       className={clases.enlace}
@@ -459,7 +462,8 @@ export default function ConfigurarAviso({
 
   // ---------- Resumen ----------
   const hayAceptado = elegidos.some((c) => c.accepted);
-  const pendientes = elegidos.filter((c) => !c.accepted).map((c) => primerNombre(c.name));
+  const pendientes = elegidos.filter((c) => !c.accepted && c.enviada).map((c) => primerNombre(c.name));
+  const sinEnviar = elegidos.filter((c) => !c.accepted && !c.enviada).map((c) => primerNombre(c.name));
 
   return (
     <Pantalla
@@ -485,6 +489,11 @@ export default function ConfigurarAviso({
             {t.resumen.podras}{" "}
             {pendientes.length > 0 &&
               rellenar(pendientes.length === 1 ? t.resumen.aunNoUno : t.resumen.aunNoVarios, { nombres: listaNombres(pendientes) })}
+          </p>
+        )}
+        {sinEnviar.length > 0 && (
+          <p className="font-medium">
+            {rellenar(sinEnviar.length === 1 ? t.resumen.noEnviadaUno : t.resumen.noEnviadaVarios, { nombres: listaNombres(sinEnviar) })}
           </p>
         )}
       </Tarjeta>
@@ -518,7 +527,7 @@ export default function ConfigurarAviso({
                     ? rellenar(elegidos.findIndex((x) => x.accepted) === i ? t.resumen.pasoPrimero : t.resumen.pasoSiguiente, { nombre: c.name })
                     : c.name}
                 </p>
-                <p className={`text-sm ${c.accepted ? "text-text-muted" : "font-medium"}`}>{c.accepted ? t.resumen.acepto : t.resumen.pendiente}</p>
+                <p className={`text-sm ${c.accepted ? "text-text-muted" : "font-medium"}`}>{c.accepted ? t.resumen.acepto : c.enviada ? t.resumen.pendiente : t.resumen.sinEnviar}</p>
               </div>
             </li>
           ))}
