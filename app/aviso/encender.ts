@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Client } from "@upstash/qstash";
 import { getBrand } from "@/lib/brand";
 import { textosInicio } from "@/components/home/textosInicio";
 import { CONFIG_EMISOR } from "./_datos/config";
 import { exigirSesion } from "./_datos/sesion";
-import { cancelarProgramado } from "./_datos/qstash";
+import { cancelarProgramado, programar } from "./_datos/qstash";
 
 // Encender y apagar el aviso (E-14 y E-12 del wireflow). El aviso empieza apagado, se enciende solo
 // si hay al menos un contacto aceptado en él y se edita solo apagado.
@@ -21,7 +20,7 @@ export async function encenderAviso(fireAt: string): Promise<ResultadoEstado> {
 
   const { data: avisos, error: errA } = await s.supabase
     .from("notices")
-    .select("id, state")
+    .select("id, state, grace_minutes")
     .eq("issuer_id", s.user.id)
     .order("created_at", { ascending: false });
   if (errA) return falla();
@@ -53,7 +52,9 @@ export async function encenderAviso(fireAt: string): Promise<ResultadoEstado> {
 
   // Programar el disparo en QStash (llamará a /api/alert a la hora del aviso). Un aviso encendido sin
   // disparo no avisaría nunca: si no se puede programar, se vuelve a apagar y se dice.
-  const programado = await programar(aviso.id, fire);
+  // El aviso a los contactos sale al acabar el tiempo de gracia, no a la hora (PRD S1).
+  const disparo = new Date(fire.getTime() + ((aviso.grace_minutes as number | null) ?? 0) * 60_000);
+  const programado = await programar(aviso.id, disparo);
   if (!programado.ok) {
     await s.supabase.from("notices").update({ state: "off", qstash_message_id: null, updated_at: new Date().toISOString() }).eq("id", aviso.id);
     return falla();
@@ -64,32 +65,6 @@ export async function encenderAviso(fireAt: string): Promise<ResultadoEstado> {
 
   revalidatePath("/home");
   return { ok: true };
-}
-
-// Sin QSTASH_TOKEN: en desarrollo se sigue sin programar (se avisa en el terminal); en producción falla.
-async function programar(noticeId: string, fire: Date): Promise<{ ok: true; messageId: string | null } | { ok: false }> {
-  const token = process.env.QSTASH_TOKEN;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!token || !appUrl) {
-    if (process.env.NODE_ENV === "production") {
-      console.error("[encender] faltan QSTASH_TOKEN o NEXT_PUBLIC_APP_URL");
-      return { ok: false };
-    }
-    console.warn("[encender] SIN QSTASH_TOKEN: el aviso queda encendido pero no se programó ningún disparo.");
-    return { ok: true, messageId: null };
-  }
-  try {
-    const qstash = new Client({ token, baseUrl: process.env.QSTASH_URL });
-    const res = await qstash.publishJSON({
-      url: `${appUrl}/api/alert`,
-      body: { notice_id: noticeId },
-      notBefore: Math.floor(fire.getTime() / 1000),
-    });
-    return { ok: true, messageId: "messageId" in res ? res.messageId : null };
-  } catch (e) {
-    console.error("[encender] QStash falló:", e instanceof Error ? e.message : e);
-    return { ok: false };
-  }
 }
 
 export async function apagarAviso(): Promise<ResultadoEstado> {

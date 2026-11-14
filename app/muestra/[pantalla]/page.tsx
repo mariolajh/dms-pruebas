@@ -14,6 +14,8 @@ import EditarContacto from "@/components/contactos/EditarContacto";
 import ListaContactos, { type ContactoFila } from "@/components/contactos/ListaContactos";
 import { textosInicio } from "@/components/home/textosInicio";
 import InicioDeMuestra from "@/components/muestra/InicioDeMuestra";
+import InicioAlerta from "@/components/home/InicioAlerta";
+import { textosHome } from "@/components/home/textos";
 import Marco from "@/components/muestra/Marco";
 import { PANTALLAS } from "../pantallas";
 
@@ -114,6 +116,7 @@ export default async function PantallaDeMuestra({ params }: { params: Promise<{ 
     "inicio-esperando": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="esperando" />,
     "inicio-apagado": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="apagado" />,
     "inicio-ana-acepto": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="aceptacion" />,
+    "inicio-alerta": () => <InicioAlerta t={tInicio} textos={textosHome(marca.variant)} app={marca.name} nombre="Mariana" />,
     "inicio-activo": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="activo" />,
     "aviso-hora": () => aviso("hora"),
     "aviso-contactos": () => aviso("contactos"),

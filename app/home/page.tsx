@@ -1,15 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getBrand } from "@/lib/brand";
-import SignOutButton from "@/components/auth/SignOutButton";
-import TestEmailButton from "@/components/auth/TestEmailButton";
-import NoticeForm from "@/components/notices/NoticeForm";
-import PushButton from "@/components/pwa/PushButton";
-import CancelarAlerta from "@/components/home/CancelarAlerta";
 import { textosHome } from "@/components/home/textos";
 import { textosInicio } from "@/components/home/textosInicio";
 import InicioApagado from "@/components/home/InicioApagado";
 import InicioActivo from "@/components/home/InicioActivo";
+import InicioAlerta from "@/components/home/InicioAlerta";
 import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import { avisoActual } from "@/app/aviso/_datos/sesion";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
@@ -26,9 +22,9 @@ export async function generateMetadata() {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ alerta?: string; encendido?: string; apagado?: string }>;
+  searchParams: Promise<{ alerta?: string; encendido?: string; apagado?: string; confirmado?: string }>;
 }) {
-  const { alerta, encendido, apagado } = await searchParams;
+  const { alerta, encendido, apagado, confirmado } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,11 +44,13 @@ export default async function HomePage({
   // sin aviso → onboarding · apagado → Inicio apagado · encendido / en alerta → lo de abajo.
   if (!aviso) redirect("/alta");
   if (aviso.state === "off") {
-    const [{ data: filas }, extrasAviso, { data: todosAceptados }] = await Promise.all([
+    const [{ data: filas }, extrasAviso, { data: todosAceptados }, { count: confirmaciones }] = await Promise.all([
       supabase.from("notice_contacts").select("position, contacts(id, name, status, accepted_at)").eq("notice_id", aviso.id).order("position"),
       adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null),
       // Contactos que ya aceptaron (para saber si alguno está fuera de este aviso).
       supabase.from("contacts").select("id, name").eq("issuer_id", user.id).eq("status", "accepted"),
+      // Si ya confirmó alguna vez (o canceló una alerta), el aviso ya se usó: el cuadro de "aceptó" ya no hace falta.
+      supabase.from("confirmations").select("id", { count: "exact", head: true }).eq("issuer_id", user.id),
     ]);
     const contactos = (filas ?? [])
       .map((f) => (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { id: string; name: string; status: string; accepted_at: string | null } | null)
@@ -68,7 +66,7 @@ export default async function HomePage({
     const aceptadosFuera = (todosAceptados ?? []).filter((c) => !dentro.has(c.id)).map((c) => primerNombre(c.name));
     // Cuadro "X aceptó tu invitación": solo con aceptados recientes (7 días) que ya están en el aviso.
     const hace7 = Date.now() - 7 * 86_400_000;
-    const recientes = contactos.filter((c) => c.status === "accepted" && c.accepted_at && new Date(c.accepted_at).getTime() > hace7).map((c) => primerNombre(c.name));
+    const recientes = (confirmaciones ?? 0) > 0 ? [] : contactos.filter((c) => c.status === "accepted" && c.accepted_at && new Date(c.accepted_at).getTime() > hace7).map((c) => primerNombre(c.name));
     // Quienes se dieron de baja desde su correo en los últimos 30 días: Inicio dice que se fueron.
     const { data: salidas } = await supabase
       .from("contacts")
@@ -87,6 +85,7 @@ export default async function HomePage({
         nombre={primerNombre(profile?.full_name ?? "")}
         aceptados={aceptados}
         apagadoAhora={apagado === "1"}
+        canceladaAhora={alerta === "cancelada" ? textos.canceladaTitulo : undefined}
         plazo={{ fireAt: aviso.fire_at, frecuencia: aviso.recurrence as Frecuencia, dias: extrasAviso?.dias ?? [] }}
         pendientes={contactos.filter((c) => c.status === "pending" && enviada(c)).map((c) => primerNombre(c.name))}
         sinEnviar={contactos.filter((c) => c.status === "pending" && !enviada(c)).map((c) => primerNombre(c.name))}
@@ -96,76 +95,22 @@ export default async function HomePage({
     );
   }
 
-  // E6: con una alerta en curso, el home pide cancelarla (acción deliberada).
-  const { data: enAlerta } = await supabase
-    .from("v_my_notice")
-    .select("id")
-    .eq("state", "alert")
-    .limit(1);
-  const hayAlerta = (enAlerta?.length ?? 0) > 0;
-
-  // Aviso encendido y sin alerta (E-02 Activo). Alerta y tiempo de gracia siguen en la página de pruebas.
-  if (aviso.state === "active" && !hayAlerta && alerta !== "cancelada") {
-    const extrasAviso = await adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null);
-    return (
-      <InicioActivo
-        t={textosInicio(brand.variant)}
-        app={brand.name}
-        nombre={primerNombre(profile?.full_name ?? "")}
-        encendidoAhora={encendido === "1"}
-        plazo={{ fireAt: aviso.fire_at, frecuencia: aviso.recurrence as Frecuencia, dias: extrasAviso?.dias ?? [] }}
-      />
-    );
+  // Alerta en curso: Inicio con la alerta y el botón para cancelar (mantener 2 s).
+  if (aviso.state === "alert") {
+    return <InicioAlerta t={textosInicio(brand.variant)} textos={textos} app={brand.name} nombre={primerNombre(profile?.full_name ?? "")} />;
   }
 
+  // Aviso encendido (E-02 Activo), con su ventana de confirmar y su tiempo de gracia.
+  const extrasAviso = await adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null);
   return (
-    <main className="mx-auto max-w-md space-y-6 p-6">
-      <header>
-        <h1 className="text-2xl font-semibold">{brand.name}</h1>
-        <p className="text-text-muted">
-          Hola{profile?.full_name ? `, ${profile.full_name}` : ""}. El núcleo está funcionando.
-        </p>
-      </header>
-
-      {hayAlerta && (
-        <section
-          aria-labelledby="alerta-en-curso"
-          className="space-y-3 rounded-lg border-2 border-danger bg-surface p-4"
-        >
-          <h2 id="alerta-en-curso" className="text-lg font-semibold">
-            {textos.alertaTitulo}
-          </h2>
-          <p className="text-text-muted">{textos.alertaCuerpo}</p>
-          <CancelarAlerta textos={textos} />
-        </section>
-      )}
-
-      {!hayAlerta && alerta === "cancelada" && (
-        <section role="status" className="space-y-1 rounded-lg border border-border bg-surface p-4">
-          <h2 className="font-medium">{textos.canceladaTitulo}</h2>
-          <p className="text-sm text-text-muted">{textos.canceladaCuerpo}</p>
-        </section>
-      )}
-
-      <section className="space-y-1 rounded-lg bg-surface p-4">
-        <h2 className="font-medium">Verificación del núcleo</h2>
-        <p className="text-sm text-text-muted">Sesión: {user.email}</p>
-        <p className="text-sm text-text-muted">
-          Perfil en base de datos: {profile ? "sí" : "no encontrado (revisar migración)"}
-        </p>
-      </section>
-
-      <TestEmailButton />
-      <PushButton />
-
-      <hr className="border-border" />
-
-      <section className="space-y-3">
-        <h2 className="font-medium">Probar Aviso</h2>
-        <NoticeForm />
-      </section>
-
-      <SignOutButton />
-    </main>
+    <InicioActivo
+      t={textosInicio(brand.variant)}
+      app={brand.name}
+      nombre={primerNombre(profile?.full_name ?? "")}
+      encendidoAhora={encendido === "1"}
+      confirmadoAhora={confirmado === "1"}
+      graciaMin={(aviso.grace_minutes as number | null) ?? 0}
+      plazo={{ fireAt: aviso.fire_at, frecuencia: aviso.recurrence as Frecuencia, dias: extrasAviso?.dias ?? [] }}
+    />
   );
 }

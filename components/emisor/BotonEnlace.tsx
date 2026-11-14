@@ -3,7 +3,7 @@
 import Link, { useLinkStatus } from "next/link";
 import Spinner from "./Spinner";
 
-// Enlace con aspecto de botón que enseña un ícono de carga mientras la pantalla siguiente se prepara.
+// Enlace con aspecto de botón que enseña un icono de carga mientras la pantalla siguiente se prepara.
 function Indicador() {
   const { pending } = useLinkStatus();
   return pending ? <Spinner /> : null;

@@ -1,4 +1,4 @@
-// Ícono de carga para botones y pantallas que esperan al servidor. Se detiene si la persona
+// Icono de carga para botones y pantallas que esperan al servidor. Se detiene si la persona
 // pide menos movimiento. Decorativo: el texto del botón ya dice qué pasa ("Enviando…").
 export default function Spinner({ className = "size-5" }: { className?: string }) {
   return (

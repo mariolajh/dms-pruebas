@@ -40,6 +40,7 @@ export const GRUPOS: Grupo[] = [
     texto: "El aviso encendido. Aquí va \"Estoy bien\", 30 min antes de la hora.",
     pantallas: [
       { id: "inicio-ana-acepto", titulo: "Inicio · Ana aceptó (propuesta)", nota: "PROPUESTA: cuadro encima del aviso cuando alguien acepta. Roza la tarjeta de la invitación." },
+      { id: "inicio-alerta", titulo: "Inicio · Alerta en curso", nota: "Con la alerta en marcha: solo el estado y cancelar con mantener 2 s." },
       { id: "inicio-activo", titulo: "Inicio · Aviso encendido", nota: "Hoy muestra el plazo y el interruptor para apagar." },
     ],
   },

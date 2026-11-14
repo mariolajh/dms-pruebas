@@ -86,6 +86,7 @@ export default function ListaContactos({
       <>
         {puedeAgregar && (
           <EnlaceBoton href="/contactos/nuevo" tipo={hayUtiles ? "secundario" : "principal"}>
+            <Mas />
             {t.agregarOtro}
           </EnlaceBoton>
         )}

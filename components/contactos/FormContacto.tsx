@@ -92,7 +92,7 @@ export default function FormContacto({
               </p>
             )}
           </div>
-          {!enAlta && (
+          {(
             <div>
               <label htmlFor="relacion" className={clases.etiqueta}>
                 {t.relacion} <span className="font-normal text-text-muted">{t.opcional}</span>

@@ -35,11 +35,14 @@ export default function InicioApagado({
   aceptados,
   aceptadosFuera = [],
   salieron = [],
+  canceladaAhora,
   plazo,
   apagadoAhora,
   avisoAceptacion,
 }: {
   aceptadosFuera?: string[];
+  // Tras cancelar una falsa alarma: aviso breve ("Cancelaste la alerta").
+  canceladaAhora?: string;
   // Quienes se dieron de baja desde su correo.
   salieron?: string[];
   // PROPUESTA para Luna (solo se usa en /muestra): cuadro que avisa de que alguien aceptó.
@@ -63,6 +66,7 @@ export default function InicioApagado({
       <main className="flex-1 space-y-4 p-4">
         {/* Si alguien acepta mientras tanto, Inicio se actualiza solo. */}
         <RefrescarSolo />
+        {canceladaAhora && <Toast texto={canceladaAhora} quitarParametro="alerta" />}
         {apagadoAhora && <Toast texto={t.apagadoListo} quitarParametro="apagado" />}
         <Encabezado nombre={app} />
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>

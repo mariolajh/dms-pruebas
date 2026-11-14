@@ -41,12 +41,13 @@ export default async function Baja({ searchParams }: { searchParams: Promise<{ t
   if (!token || !admin) return invalida;
 
   const hash = createHash("sha256").update(token).digest("hex");
-  const { data: c } = await admin.from("contacts").select("status, issuer_id").eq("invite_token_hash", hash).maybeSingle();
+  const { data: c } = await admin.from("contacts").select("status, issuer_id, removed_at").eq("invite_token_hash", hash).maybeSingle();
   if (!c) return invalida;
   const { data: perfil } = await admin.from("profiles").select("full_name").eq("id", c.issuer_id).maybeSingle();
   const v = { nombre: primerNombre(perfil?.full_name?.trim() || "") || "esa persona", app: brand.name };
 
-  if (c.status === "removed") {
+  // Quitado, o dado de baja desde su correo (queda como rechazado con fecha de salida).
+  if (c.status === "removed" || (c.status === "rejected" && c.removed_at)) {
     return (
       <Mensaje marca={brand.name} titulo={con(t.baja.hecho, v)}>
         <p>{t.baja.hechoTexto}</p>

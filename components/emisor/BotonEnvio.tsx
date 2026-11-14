@@ -3,7 +3,7 @@
 import { useFormStatus } from "react-dom";
 import Spinner from "./Spinner";
 
-// Botón de envío de un formulario con acción de servidor: mientras espera la respuesta enseña el ícono de
+// Botón de envío de un formulario con acción de servidor: mientras espera la respuesta enseña el icono de
 // carga y el texto "pendiente". Va dentro del <form>.
 export default function BotonEnvio({ className, children, pendiente }: { className: string; children: React.ReactNode; pendiente: string }) {
   const { pending } = useFormStatus();

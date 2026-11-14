@@ -16,7 +16,11 @@ export default function InicioActivo({
   nombre,
   plazo,
   encendidoAhora,
+  confirmadoAhora = false,
+  graciaMin = 0,
 }: {
+  graciaMin?: number;
+  confirmadoAhora?: boolean;
   t: TextosInicio;
   app: string;
   nombre: string;
@@ -27,6 +31,7 @@ export default function InicioActivo({
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
       <main className="flex-1 space-y-4 p-4">
         {encendidoAhora && <Toast texto={t.encendido} quitarParametro="encendido" />}
+        {confirmadoAhora && <Toast texto={t.confirmadoToast} quitarParametro="confirmado" />}
         <Encabezado nombre={app} />
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>
         <Tarjeta>
@@ -37,7 +42,7 @@ export default function InicioActivo({
           </div>
           <h2 className="text-lg font-semibold">{t.tuAviso}</h2>
           <PlazoActivo t={t} fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} />
-          <ControlAviso t={t} encendido fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} notaEditar={t.editarDesactivado} />
+          <ControlAviso t={t} encendido fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} notaEditar={t.editarDesactivado} graciaMin={graciaMin} />
         </Tarjeta>
       </main>
       <BarraNavegacion t={t.nav} actual="inicio" />

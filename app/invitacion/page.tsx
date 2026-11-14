@@ -81,7 +81,7 @@ export default async function Invitacion({ searchParams }: { searchParams: Promi
   const hash = createHash("sha256").update(token).digest("hex");
   const { data: contacto } = await admin
     .from("contacts")
-    .select("name, status, issuer_id")
+    .select("name, status, issuer_id, removed_at")
     .eq("invite_token_hash", hash)
     .maybeSingle();
   if (!contacto || contacto.status === "removed") return invalida;
@@ -98,6 +98,14 @@ export default async function Invitacion({ searchParams }: { searchParams: Promi
         <Link href={`/baja?token=${encodeURIComponent(token)}`} className={clases.enlace}>
           {t.aceptada.baja}
         </Link>
+      </Mensaje>
+    );
+  }
+  if (contacto.status === "rejected" && contacto.removed_at) {
+    // Se dio de baja desde su correo: se le dice que ya no es contacto, no que rechazó.
+    return (
+      <Mensaje marca={brand.name} titulo={con(t.baja.hecho, v)}>
+        <p>{t.baja.hechoTexto}</p>
       </Mensaje>
     );
   }

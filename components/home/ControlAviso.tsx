@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { encenderAviso, apagarAviso } from "@/app/aviso/encender";
+import { confirmarEstoyBien } from "@/app/aviso/confirmar";
 import { CONFIG_EMISOR } from "@/app/aviso/_datos/config";
 import { horaCorta, proximoPlazo } from "@/app/aviso/_datos/formato";
 import { rellenar } from "@/components/aviso/textos";
@@ -32,7 +33,10 @@ export default function ControlAviso({
   estado,
   detalle,
   notaEditar,
+  graciaMin = 0,
 }: {
+  // Minutos de tiempo de gracia del aviso (pasada la hora, antes de avisar a los contactos).
+  graciaMin?: number;
   // Aviso bajo el interruptor ("Para editarlo, apaga primero"). No sale mientras no se puede apagar.
   notaEditar?: string;
   // Con estado, el interruptor va a la derecha de un bloque con el estado y su explicación (Inicio apagado).
@@ -49,12 +53,19 @@ export default function ControlAviso({
   const [error, setError] = useState<string | null>(null);
   const [, empezar] = useTransition();
   const [bloqueado, setBloqueado] = useState(false);
+  const [enGracia, setEnGracia] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
+  const [errorConfirmar, setErrorConfirmar] = useState<string | null>(null);
   const aviso = useRef<HTMLDivElement>(null);
   const pregunta = useRef<HTMLParagraphElement>(null);
 
   // Mientras se espera la confirmación no se puede apagar (ventana antes de la hora y tiempo de gracia).
   useEffect(() => {
-    const calcula = () => setBloqueado(encendido && Date.now() >= new Date(fireAt).getTime() - CONFIG_EMISOR.ventanaConfirmarMin * 60_000);
+    const calcula = () => {
+      const f = new Date(fireAt).getTime();
+      setBloqueado(encendido && Date.now() >= f - CONFIG_EMISOR.ventanaConfirmarMin * 60_000);
+      setEnGracia(encendido && Date.now() >= f);
+    };
     calcula();
     const id = setInterval(calcula, 30_000);
     return () => clearInterval(id);
@@ -104,6 +115,22 @@ export default function ControlAviso({
       } else {
         setError(r.error);
         setFase("error");
+      }
+    });
+  }
+
+  // "Estoy bien": solo se da por hecho cuando el servidor lo guardó.
+  function confirmar() {
+    setConfirmando(true);
+    setErrorConfirmar(null);
+    empezar(async () => {
+      const r = await confirmarEstoyBien().catch(() => ({ ok: false as const, error: t.confirmar.error }));
+      if (r.ok) {
+        router.replace("/home?confirmado=1");
+        router.refresh();
+      } else {
+        setErrorConfirmar(r.error);
+        setConfirmando(false);
       }
     });
   }
@@ -202,8 +229,25 @@ export default function ControlAviso({
           })()}
           {bloqueado ? (
             <div id="no-se-puede-apagar" className="space-y-1 rounded-lg bg-surface-muted p-3">
-              <p className="font-semibold">{t.noSePuedeTitulo}</p>
-              <p className="text-sm text-text-muted">{rellenar(t.noSePuedeTexto, { hasta: horaDe(new Date(fireAt)) })}</p>
+              <p className="font-semibold">{enGracia ? t.graciaTitulo : t.noSePuedeTitulo}</p>
+              <p className="text-sm text-text-muted">{enGracia
+                  ? rellenar(t.graciaTexto, { hasta: horaDe(new Date(new Date(fireAt).getTime() + graciaMin * 60_000)) })
+                  : rellenar(t.noSePuedeTexto, { hasta: horaDe(new Date(fireAt)) })}</p>
+              {errorConfirmar && (
+                <p role="alert" className="text-sm font-medium text-danger">
+                  {errorConfirmar}
+                </p>
+              )}
+              <button type="button" onClick={confirmar} disabled={confirmando} aria-busy={confirmando} className={clases.principal}>
+                {confirmando ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Spinner />
+                    {t.confirmando}
+                  </span>
+                ) : (
+                  t.estoyBien
+                )}
+              </button>
             </div>
           ) : (
             notaEditar && <p className="text-sm text-text-muted">{notaEditar}</p>

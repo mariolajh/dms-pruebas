@@ -113,20 +113,20 @@ export default function HoldButton({
 
   const sujetando = progress > 0 && progress < 1;
   return (
-    <div className="space-y-4">
-      {/* PRD 12/11 (E6): la instrucción va ARRIBA y en grande, antes del botón. */}
-      <div id="hold-help" className="flex items-start gap-3 rounded-xl bg-surface-muted p-4">
+    <div className="space-y-3">
+      {/* PRD 12/11 (E6): la instrucción va ARRIBA, antes del botón. */}
+      <div id="hold-help" className="flex items-start gap-3">
         {/* Icono de "pulsar y mantener": un punto con dos ondas. */}
-        <span aria-hidden="true" className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-primary text-brand-on-primary">
-          <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth="2">
+        <span aria-hidden="true" className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted text-brand-primary">
+          <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="3" fill="currentColor" />
             <circle cx="12" cy="12" r="6.5" />
             <circle cx="12" cy="12" r="10" opacity="0.5" />
           </svg>
         </span>
         <div>
-          <p className="text-xl font-bold leading-snug">{help}</p>
-          <p className="mt-1 text-text-muted">{helpSmall}</p>
+          <p className="text-lg font-semibold leading-snug">{help}</p>
+          <p className="text-sm text-text-muted">{helpSmall}</p>
           <p className="sr-only">{helpAssisted}</p>
         </div>
       </div>
@@ -140,18 +140,11 @@ export default function HoldButton({
         onPointerCancel={cancelHold}
         onContextMenu={(e) => e.preventDefault()}
         onClick={onClick}
-        className="relative min-h-20 w-full touch-none select-none overflow-hidden rounded-2xl border-2 border-brand-primary bg-surface px-4 py-4 text-lg font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-60"
+        className="relative min-h-14 w-full touch-none select-none overflow-hidden rounded-lg bg-brand-primary px-4 py-3 font-semibold text-brand-on-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:opacity-60"
       >
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 bg-brand-primary/25"
-          style={{ width: `${Math.round(progress * 100)}%` }}
-        />
-        <span className="relative">{busy ? busyLabel : label}</span>
+        <span aria-hidden="true" className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${Math.round(progress * 100)}%` }} />
+        <span className="relative">{busy ? busyLabel : sujetando ? holdingLabel : label}</span>
       </button>
-      <p aria-hidden="true" className={`text-center font-medium ${sujetando ? "" : "invisible"}`}>
-        {holdingLabel}
-      </p>
     </div>
   );
 }

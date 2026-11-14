@@ -60,7 +60,19 @@ const COMUNES = {
   dejarActivo: "Dejarlo activo",
   // Dentro de los 30 min previos a la hora: ni se apaga ni se edita.
   noSePuedeTitulo: "Es hora de confirmar",
-  noSePuedeTexto: "Confirma que estás bien antes de las {hasta}. Hasta entonces no puedes apagar ni editar tu aviso.",
+  // Pasada la hora y antes de avisar a los contactos.
+  graciaTitulo: "Estás en el tiempo de gracia",
+  graciaTexto: "La hora de tu aviso ya pasó. Confirma que estás bien antes de las {hasta} o avisaremos a tus contactos.",
+  alertaBadge: "Alerta en curso",
+  noSePuedeTexto: "Confirma que estás bien antes de las {hasta} Hasta entonces no puedes apagar ni editar tu aviso.",
+  // Estoy bien (E-08), dentro de los 30 min previos.
+  confirmando: "Confirmando…",
+  confirmadoToast: "Confirmaste que estás bien",
+  confirmar: {
+    error: "No pudimos registrar tu confirmación. Revisa tu conexión e inténtalo otra vez.",
+    temprano: "Todavía no es hora de confirmar.",
+    tarde: "La hora de confirmar ya pasó.",
+  },
   encender: {
     // El título ya dice "No pudimos encender tu aviso": aquí solo la segunda parte.
     error: "Revisa tu conexión e inténtalo otra vez.",
