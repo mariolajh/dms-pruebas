@@ -58,9 +58,15 @@ export default async function Contactos({
         {hayUtiles && <EnlaceBoton href="/aviso">{t.continuar}</EnlaceBoton>}
       </>
     ) : undefined;
+  // Fuera del alta, "Agregar" es la única acción de la pantalla: principal y fijo abajo,
+  // como en E-05 del wireflow (Action Button Principal, "Agregar contacto").
+  const pieContactos =
+    !enAlta && puedeAgregar ? (
+      <EnlaceBoton href="/contactos/nuevo">{contactos.length === 0 ? t.agregarPrimero : t.agregar}</EnlaceBoton>
+    ) : undefined;
 
   return (
-    <Pantalla pie={pieAlta} nav={enAlta ? undefined : <BarraNavegacion t={textosInicio(getBrand().variant).nav} actual="contactos" />}>
+    <Pantalla pie={enAlta ? pieAlta : pieContactos} nav={enAlta ? undefined : <BarraNavegacion t={textosInicio(getBrand().variant).nav} actual="contactos" />}>
       {enAlta ? <Progreso actual={2} total={3} siguiente={t.siguiente} /> : <h1 className="pt-2 text-2xl font-semibold">{t.titulo}</h1>}
 
       {enviada && <Toast texto={t.enviada} quitarParametro="enviada" />}
@@ -107,11 +113,6 @@ export default async function Contactos({
           })}
         </ul>
       </Tarjeta>
-      {!enAlta && puedeAgregar && (
-        <EnlaceBoton href="/contactos/nuevo" tipo="secundario">
-          {t.agregar}
-        </EnlaceBoton>
-      )}
     </Pantalla>
   );
 }

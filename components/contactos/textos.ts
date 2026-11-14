@@ -38,6 +38,7 @@ const COMUNES = {
     aceptoEl: "Aceptó",
     rechazo: "Rechazó la invitación",
     agregar: "Agregar otro contacto",
+    agregarPrimero: "Agregar contacto",
     continuar: "Continuar",
     reenviar: "Reenviar invitación",
     reenviando: "Reenviando…",
