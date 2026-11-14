@@ -1,0 +1,83 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { getBrand } from "@/lib/brand";
+import { textosInicio } from "@/components/home/textosInicio";
+import { CONFIG_EMISOR } from "./_datos/config";
+import { exigirSesion } from "./_datos/sesion";
+
+// Encender y apagar el aviso (E-14 y E-12 del wireflow). El aviso empieza apagado, se enciende solo
+// si hay al menos un contacto aceptado en él y se edita solo apagado.
+// No programa nada en QStash (es del núcleo, ver pedidos-al-nucleo): solo cambia el estado y el plazo.
+
+export type ResultadoEstado = { ok: true } | { ok: false; error: string };
+
+export async function encenderAviso(fireAt: string): Promise<ResultadoEstado> {
+  const s = await exigirSesion();
+  const t = textosInicio(getBrand().variant).encender;
+  const falla = (error = t.error): ResultadoEstado => ({ ok: false, error });
+
+  const { data: avisos, error: errA } = await s.supabase
+    .from("notices")
+    .select("id, state")
+    .eq("issuer_id", s.user.id)
+    .order("created_at", { ascending: false });
+  if (errA) return falla();
+  const lista = avisos ?? [];
+  // Un solo aviso activo o en alerta por persona.
+  if (lista.some((a) => a.state !== "off")) return falla(t.yaEncendido);
+  const aviso = lista[0];
+  if (!aviso) return falla(t.sinAviso);
+
+  // Al menos un contacto del aviso tiene que haber aceptado (y no estar dado de baja).
+  const { data: filas, error: errC } = await s.supabase.from("notice_contacts").select("contacts(status)").eq("notice_id", aviso.id);
+  if (errC) return falla();
+  const hayAceptado = (filas ?? []).some((f) => {
+    const c = (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { status: string } | null;
+    return c?.status === "accepted";
+  });
+  if (!hayAceptado) return falla(t.sinAceptado);
+
+  const fire = new Date(fireAt);
+  const margen = fire.getTime() - Date.now();
+  if (Number.isNaN(fire.getTime()) || margen < 30_000 || margen > 8 * 86_400_000) return falla(t.horaPasada);
+
+  const { error } = await s.supabase
+    .from("notices")
+    .update({ state: "active", fire_at: fire.toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", aviso.id)
+    .eq("state", "off");
+  if (error) return falla();
+
+  revalidatePath("/home");
+  return { ok: true };
+}
+
+export async function apagarAviso(): Promise<ResultadoEstado> {
+  const s = await exigirSesion();
+  const t = textosInicio(getBrand().variant).apagar;
+
+  const { data: aviso, error: errA } = await s.supabase
+    .from("notices")
+    .select("id, state, fire_at")
+    .eq("issuer_id", s.user.id)
+    .in("state", ["active", "alert"])
+    .maybeSingle();
+  if (errA) return { ok: false, error: t.error };
+  if (!aviso) return { ok: true }; // ya estaba apagado
+  // Con una alerta en curso no se apaga: se cancela con "Estoy bien, cancelar alerta" (E-10).
+  if (aviso.state === "alert") return { ok: false, error: t.enAlerta };
+  // "¿Se puede apagar ahora?" (wireflow): no mientras se espera la confirmación (ventana y gracia).
+  const desde = new Date(aviso.fire_at).getTime() - CONFIG_EMISOR.ventanaConfirmarMin * 60_000;
+  if (Date.now() >= desde) return { ok: false, error: t.enVentana };
+
+  const { error } = await s.supabase
+    .from("notices")
+    .update({ state: "off", updated_at: new Date().toISOString() })
+    .eq("id", aviso.id)
+    .eq("state", "active");
+  if (error) return { ok: false, error: t.error };
+
+  revalidatePath("/home");
+  return { ok: true };
+}

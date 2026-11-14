@@ -9,6 +9,8 @@ import CancelarAlerta from "@/components/home/CancelarAlerta";
 import { textosHome } from "@/components/home/textos";
 import { textosInicio } from "@/components/home/textosInicio";
 import InicioApagado from "@/components/home/InicioApagado";
+import InicioActivo from "@/components/home/InicioActivo";
+import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import { avisoActual } from "@/app/aviso/_datos/sesion";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
 import type { DatosContacto } from "@/app/aviso/_datos/tipos";
@@ -23,9 +25,9 @@ export async function generateMetadata() {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ alerta?: string }>;
+  searchParams: Promise<{ alerta?: string; encendido?: string; apagado?: string }>;
 }) {
-  const { alerta } = await searchParams;
+  const { alerta, encendido, apagado } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -59,12 +61,25 @@ export default async function HomePage({
       .leerContactos(user.id, contactos.map((c) => c.id))
       .catch(() => ({}) as Record<string, DatosContacto>);
     const enviada = (c: { id: string }) => !!extras[c.id]?.invitacionEnviadaEn;
+    const aceptados = contactos.filter((c) => c.status === "accepted").map((c) => primerNombre(c.name));
+    // "Tu aviso se apagó" (E-22): sin aceptados y alguien que sí había aceptado ya no está.
+    const { data: bajas } = await supabase
+      .from("contacts")
+      .select("id")
+      .eq("issuer_id", user.id)
+      .eq("status", "removed")
+      .not("accepted_at", "is", null)
+      .limit(1);
+    const extrasAviso = await adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null);
     return (
       <InicioApagado
         t={textosInicio(brand.variant)}
         app={brand.name}
         nombre={primerNombre(profile?.full_name ?? "")}
-        hayAceptado={contactos.some((c) => c.status === "accepted")}
+        aceptados={aceptados}
+        seApago={(bajas?.length ?? 0) > 0}
+        apagadoAhora={apagado === "1"}
+        plazo={{ fireAt: aviso.fire_at, frecuencia: aviso.recurrence as Frecuencia, dias: extrasAviso?.dias ?? [] }}
         pendientes={contactos.filter((c) => c.status === "pending" && enviada(c)).map((c) => primerNombre(c.name))}
         sinEnviar={contactos.filter((c) => c.status === "pending" && !enviada(c)).map((c) => primerNombre(c.name))}
         vacio={contactos.length === 0}
@@ -80,6 +95,20 @@ export default async function HomePage({
     .eq("state", "alert")
     .limit(1);
   const hayAlerta = (enAlerta?.length ?? 0) > 0;
+
+  // Aviso encendido y sin alerta (E-02 Activo). Alerta y tiempo de gracia siguen en la página de pruebas.
+  if (aviso.state === "active" && !hayAlerta && alerta !== "cancelada") {
+    const extrasAviso = await adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null);
+    return (
+      <InicioActivo
+        t={textosInicio(brand.variant)}
+        app={brand.name}
+        nombre={primerNombre(profile?.full_name ?? "")}
+        encendidoAhora={encendido === "1"}
+        plazo={{ fireAt: aviso.fire_at, frecuencia: aviso.recurrence as Frecuencia, dias: extrasAviso?.dias ?? [] }}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto max-w-md space-y-6 p-6">

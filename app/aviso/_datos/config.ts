@@ -24,6 +24,10 @@ export const CONFIG_EMISOR = {
     maximoMin: 24 * 60,
   },
 
+  // Minutos antes de la hora del aviso en que ya se puede confirmar "Estoy bien" (E-02: "Podrás confirmar
+  // desde las 7:30 p. m." para un aviso de las 8:00 p. m.). Sale del wireflow, no del PRD: por validar.
+  ventanaConfirmarMin: 30,
+
   mensajeMax: 300,
   contactosMax: 5,
 
