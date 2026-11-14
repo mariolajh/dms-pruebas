@@ -8,7 +8,20 @@ import type { TextosContactos } from "./textos";
 
 // E5 · Reenviar (decidido el 2/11). Solo dice "reenviada" si el correo salió.
 // sinEnviar: la invitación nunca salió, así que el botón dice "Enviar", no "Reenviar".
-export default function Reenviar({ contactId, nombre, sinEnviar, t }: { contactId: string; nombre: string; sinEnviar: boolean; t: TextosContactos["lista"] }) {
+export default function Reenviar({
+  contactId,
+  nombre,
+  sinEnviar,
+  t,
+  comoBoton = false,
+}: {
+  contactId: string;
+  nombre: string;
+  sinEnviar: boolean;
+  t: TextosContactos["lista"];
+  // En el detalle (E-16) es un botón con borde; en la lista, un enlace.
+  comoBoton?: boolean;
+}) {
   const [estado, accion, enviando] = useActionState<EstadoReenviar, FormData>(reenviarInvitacion, {});
   // Cada respuesta nueva vuelve a sacar el toast, aunque pulses dos veces.
   const [envios, setEnvios] = useState(0);
@@ -20,7 +33,7 @@ export default function Reenviar({ contactId, nombre, sinEnviar, t }: { contactI
   return (
     <form action={accion}>
       <input type="hidden" name="contact_id" value={contactId} />
-      <button type="submit" disabled={enviando} className={clases.enlace} aria-label={`${etiqueta} a ${nombre}`}>
+      <button type="submit" disabled={enviando} className={comoBoton ? clases.secundario : clases.enlace} aria-label={`${etiqueta} a ${nombre}`}>
         {enviando ? t.reenviando : etiqueta}
       </button>
       {/* Éxito: toast temporal. Error: texto fijo, porque pide una acción. */}

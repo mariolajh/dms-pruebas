@@ -1,56 +1,67 @@
 import { redirect } from "next/navigation";
 import { getBrand } from "@/lib/brand";
 import { textosContactos } from "@/components/contactos/textos";
-import EditarContacto from "@/components/contactos/EditarContacto";
+import DetalleContacto from "@/components/contactos/DetalleContacto";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
-import { primerNombre } from "@/app/aviso/_datos/formato";
 import type { DatosContacto } from "@/app/aviso/_datos/tipos";
 import { exigirSesion } from "@/app/aviso/_datos/sesion";
 
-// E-17 · Editar contacto.
+// E-16 · Detalle del contacto.
 export async function generateMetadata() {
-  return { title: textosContactos(getBrand().variant).editar.titulo };
+  return { title: textosContactos(getBrand().variant).detalle.titulo };
 }
 
-export default async function ContactoEditar({ params }: { params: Promise<{ id: string }> }) {
+const dia = (iso: string) => new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" }).replace(".", "");
+
+export default async function ContactoDetalle({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const s = await exigirSesion();
   const t = textosContactos(getBrand().variant);
 
-  const { data: c } = await s.supabase
+  // Todos los contactos vigentes: hace falta el número de fila, igual que en la lista.
+  const { data: todos } = await s.supabase
     .from("contacts")
-    .select("id, name, email, status")
-    .eq("id", id)
+    .select("id, name, email, status, created_at, accepted_at")
     .eq("issuer_id", s.user.id)
     .neq("status", "removed")
-    .maybeSingle();
-  if (!c) redirect("/contactos");
+    .order("position");
+  const i = (todos ?? []).findIndex((x) => x.id === id);
+  if (i < 0) redirect("/contactos");
+  const c = todos![i];
 
   const extras = await adaptadorExtras(s.supabase)
     .leerContactos(s.user.id, [c.id])
     .catch(() => ({}) as Record<string, DatosContacto>);
+  const e = extras[c.id];
 
-  // ¿Es la única persona que aceptó dentro de un aviso encendido? Entonces cambiar su correo lo apaga.
-  let apagaAviso = false;
-  if (c.status === "accepted") {
-    const { data: activos } = await s.supabase.from("notices").select("id").eq("issuer_id", s.user.id).eq("state", "active");
-    for (const aviso of activos ?? []) {
-      const { data: filas } = await s.supabase.from("notice_contacts").select("contact_id, contacts(status)").eq("notice_id", aviso.id);
-      const aceptados = (filas ?? []).filter((f) => {
-        const x = (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { status: string } | null;
-        return x?.status === "accepted";
-      });
-      if (aceptados.length === 1 && aceptados[0].contact_id === c.id) apagaAviso = true;
-    }
+  // Posición dentro del aviso (el orden en que se avisa).
+  const { data: aviso } = await s.supabase.from("notices").select("id").eq("issuer_id", s.user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  let orden: number | null = null;
+  if (aviso) {
+    const { data: filas } = await s.supabase.from("notice_contacts").select("contact_id, position").eq("notice_id", aviso.id).order("position");
+    const k = (filas ?? []).findIndex((f) => f.contact_id === c.id);
+    if (k >= 0) orden = k + 1;
   }
 
+  const acepto = c.status === "accepted";
+  const fechaIso = acepto ? (c.accepted_at as string | null) : (e?.invitacionEnviadaEn ?? null);
+
   return (
-    <EditarContacto
-      t={t.editar}
-      tNuevo={t.nuevo}
-      contacto={{ id: c.id, name: c.name, email: c.email, relacion: extras[c.id]?.relacion ?? "", primerNombre: primerNombre(c.name) }}
-      apagaAviso={apagaAviso}
-      acepto={c.status === "accepted"}
+    <DetalleContacto
+      t={t.detalle}
+      tLista={t.lista}
+      c={{
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        status: c.status as "pending" | "accepted" | "rejected",
+        relacion: e?.relacion ?? null,
+        fecha: fechaIso ? dia(fechaIso) : null,
+        enviada: !!e?.invitacionEnviadaEn,
+        orden,
+        numero: i + 1,
+        mensaje: e?.mensajeInvitacion ?? null,
+      }}
     />
   );
 }

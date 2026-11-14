@@ -14,7 +14,8 @@ import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import { avisoActual } from "@/app/aviso/_datos/sesion";
 import { adaptadorExtras } from "@/app/aviso/_datos/adaptador";
 import type { DatosContacto } from "@/app/aviso/_datos/tipos";
-import { primerNombre } from "@/app/aviso/_datos/formato";
+import { listaNombres, primerNombre } from "@/app/aviso/_datos/formato";
+import { rellenar } from "@/components/aviso/textos";
 
 // Sin aviso o con el aviso apagado: pantallas del flujo de quien emite (onboarding / Inicio apagado).
 // Encendido o en alerta: sigue el placeholder del núcleo con E6, hasta construir las portadas 02 a 05.
@@ -50,12 +51,12 @@ export default async function HomePage({
   if (aviso.state === "off") {
     const { data: filas } = await supabase
       .from("notice_contacts")
-      .select("position, contacts(id, name, status)")
+      .select("position, contacts(id, name, status, accepted_at)")
       .eq("notice_id", aviso.id)
       .order("position");
     const contactos = (filas ?? [])
-      .map((f) => (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { id: string; name: string; status: string } | null)
-      .filter((c): c is { id: string; name: string; status: string } => !!c && c.status !== "removed");
+      .map((f) => (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { id: string; name: string; status: string; accepted_at: string | null } | null)
+      .filter((c): c is { id: string; name: string; status: string; accepted_at: string | null } => !!c && c.status !== "removed");
     // "Aún no responde" solo vale si la invitación salió. Si no salió, se dice eso.
     const extras = await adaptadorExtras(supabase)
       .leerContactos(user.id, contactos.map((c) => c.id))
@@ -63,8 +64,22 @@ export default async function HomePage({
     const enviada = (c: { id: string }) => !!extras[c.id]?.invitacionEnviadaEn;
     const aceptados = contactos.filter((c) => c.status === "accepted").map((c) => primerNombre(c.name));
     const extrasAviso = await adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null);
+    // Contactos que ya aceptaron pero no están dentro de este aviso (el nombre sale de la base).
+    const { data: todosAceptados } = await supabase
+      .from("contacts")
+      .select("id, name")
+      .eq("issuer_id", user.id)
+      .eq("status", "accepted");
+    const dentro = new Set(contactos.map((c) => c.id));
+    const aceptadosFuera = (todosAceptados ?? []).filter((c) => !dentro.has(c.id)).map((c) => primerNombre(c.name));
+    // Cuadro "X aceptó tu invitación": solo con aceptados recientes (7 días) que ya están en el aviso.
+    const hace7 = Date.now() - 7 * 86_400_000;
+    const recientes = contactos.filter((c) => c.status === "accepted" && c.accepted_at && new Date(c.accepted_at).getTime() > hace7).map((c) => primerNombre(c.name));
+    const tI = textosInicio(brand.variant);
     return (
       <InicioApagado
+        avisoAceptacion={recientes.length ? { titulo: rellenar(recientes.length === 1 ? tI.aceptoUno : tI.aceptoVarios, { nombres: listaNombres(recientes) }), texto: tI.aceptoTexto, enlace: tI.verContactos } : undefined}
+        aceptadosFuera={aceptadosFuera}
         t={textosInicio(brand.variant)}
         app={brand.name}
         nombre={primerNombre(profile?.full_name ?? "")}

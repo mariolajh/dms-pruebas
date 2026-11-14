@@ -39,6 +39,14 @@ async function anotarEnvio(s: Sesion, contactId: string, enviado: boolean) {
     .catch((e) => console.error("[contactos] envío no anotado:", e instanceof Error ? e.message : e));
 }
 
+// Mensaje personalizado guardado de ese contacto ("" = invitación General).
+async function mensajeGuardado(s: Sesion, contactId: string) {
+  const datos = await adaptadorExtras(s.supabase)
+    .leerContactos(s.user.id, [contactId])
+    .catch(() => ({}) as Record<string, { mensajeInvitacion: string | null }>);
+  return datos[contactId]?.mensajeInvitacion ?? "";
+}
+
 // Devuelve true solo si Resend aceptó el correo.
 async function enviarInvitacion(s: Sesion, contacto: { name: string; email: string }, token: string, mensaje = "") {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -67,7 +75,7 @@ export async function invitarContacto(_prev: EstadoInvitar, form: FormData): Pro
   const t = textosContactos(getBrand().variant).nuevo;
   const name = String(form.get("name") ?? "").trim().slice(0, 80);
   const email = String(form.get("email") ?? "").trim().toLowerCase();
-  // Relación y mensaje personalizado (E-06). El mensaje solo viaja en este correo: no se guarda.
+  // Relación y mensaje personalizado (E-06).
   const relacion = String(form.get("relacion") ?? "").trim().slice(0, 40);
   const personalizado = form.get("modo") === "personalizado";
   const mensaje = personalizado ? String(form.get("mensaje") ?? "").trim().slice(0, CONFIG_EMISOR.mensajeMax) : "";
@@ -109,6 +117,12 @@ export async function invitarContacto(_prev: EstadoInvitar, form: FormData): Pro
       .guardarRelacion(s.user.id, nuevo.id as string, relacion)
       .catch((e) => console.error("[contactos] relación no guardada:", e instanceof Error ? e.message : e));
   }
+  // El mensaje se guarda para poder verlo en el detalle y usarlo al reenviar (migración 0011).
+  if (mensaje) {
+    await adaptadorExtras(s.supabase)
+      .guardarMensajeInvitacion(s.user.id, nuevo.id as string, mensaje)
+      .catch((e) => console.error("[contactos] mensaje no guardado:", e instanceof Error ? e.message : e));
+  }
   const enviado = await enviarInvitacion(s, { name, email }, token, mensaje);
   await anotarEnvio(s, nuevo.id as string, enviado);
   revalidatePath("/contactos");
@@ -139,7 +153,7 @@ export async function reenviarInvitacion(_prev: EstadoReenviar, form: FormData):
   const { error } = await s.supabase.from("contacts").update({ invite_token_hash: hash }).eq("id", c.id);
   if (error) return { error: t.falloReenvio };
   // El enlace anterior ya no vale: si este correo falla, la invitación queda sin enviar.
-  const enviado = await enviarInvitacion(s, c, token);
+  const enviado = await enviarInvitacion(s, c, token, await mensajeGuardado(s, c.id));
   await anotarEnvio(s, c.id, enviado);
   revalidatePath("/contactos");
   return enviado ? { ok: true } : { error: t.falloReenvio };
@@ -216,7 +230,7 @@ export async function guardarContacto(_prev: EstadoEditar, form: FormData): Prom
   let destino = "/contactos?guardado=1";
   if (cambiaCorreo) {
     if (actual.status === "accepted") await apagarSinAceptados(s.supabase, s.user.id);
-    const enviado = await enviarInvitacion(s, { name, email }, token);
+    const enviado = await enviarInvitacion(s, { name, email }, token, await mensajeGuardado(s, id));
     await anotarEnvio(s, id, enviado);
     destino = enviado ? "/contactos?correo=1" : "/contactos?fallo=1";
   }

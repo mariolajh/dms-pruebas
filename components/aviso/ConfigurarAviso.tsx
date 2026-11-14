@@ -8,6 +8,7 @@ import { DIAS, duracion, duracionLarga, horaCorta, horaLarga, listaNombres, prim
 import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import { Badge, BarraTitulo, Numero, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import { rellenar, type TextosAviso } from "./textos";
+import SelectorHora from "./SelectorHora";
 
 // E · Configurar aviso · Hora / Contactos → Resumen → Guardando → Inicio.
 // Todo el asistente vive en una sola pantalla de cliente y se guarda al final (apagado).
@@ -211,18 +212,16 @@ export default function ConfigurarAviso({
       >
         {cabecera}
         <Tarjeta>
-          <label htmlFor="hora" className={clases.etiqueta}>
+          <p id="hora-etiqueta" className={clases.etiqueta}>
             {t.hora.titulo}
-          </label>
-          <input
+          </p>
+          <SelectorHora
             id="hora"
-            type="time"
-            required
-            value={hora}
-            onChange={(e) => setHora(e.target.value)}
-            aria-invalid={!!errores.hora}
-            aria-describedby={errores.hora ? "hora-error" : "hora-ayuda"}
-            className={clases.campo}
+            valor={hora}
+            onChange={setHora}
+            invalido={!!errores.hora}
+            descritoPor={errores.hora ? "hora-error" : "hora-ayuda"}
+            t={{ hora: t.hora.selHora, minutos: t.hora.selMinutos, momento: t.hora.selMomento }}
           />
           {errores.hora ? (
             <p id="hora-error" className={clases.error}>
@@ -494,7 +493,8 @@ export default function ConfigurarAviso({
               rellenar(pendientes.length === 1 ? t.resumen.aunNoUno : t.resumen.aunNoVarios, { nombres: listaNombres(pendientes) })}
           </p>
         )}
-        {sinEnviar.length > 0 && (
+        {/* Si ya hay un aceptado, se puede encender: avisar de otra invitación sin enviar solo confunde. */}
+        {!hayAceptado && sinEnviar.length > 0 && (
           <p className="font-medium">
             {rellenar(sinEnviar.length === 1 ? t.resumen.noEnviadaUno : t.resumen.noEnviadaVarios, { nombres: listaNombres(sinEnviar) })}
           </p>

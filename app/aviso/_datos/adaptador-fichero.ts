@@ -43,7 +43,7 @@ function modificar(cambio: (f: Fichero) => void): Promise<void> {
 function contacto(f: Fichero, issuerId: string, contactId: string) {
   const previo = f.contactos[contactId];
   if (previo && previo.issuerId !== issuerId) throw new Error("Contacto de otra persona");
-  return previo ?? { issuerId, relacion: null, invitacionEnviadaEn: null };
+  return previo ?? { issuerId, relacion: null, invitacionEnviadaEn: null, mensajeInvitacion: null };
 }
 
 export const adaptadorFichero: AdaptadorExtras = {
@@ -67,7 +67,7 @@ export const adaptadorFichero: AdaptadorExtras = {
     const out: Record<string, DatosContacto> = {};
     for (const id of contactIds) {
       const c = f.contactos[id];
-      if (c && c.issuerId === issuerId) out[id] = { relacion: c.relacion, invitacionEnviadaEn: c.invitacionEnviadaEn };
+      if (c && c.issuerId === issuerId) out[id] = { relacion: c.relacion, invitacionEnviadaEn: c.invitacionEnviadaEn, mensajeInvitacion: c.mensajeInvitacion ?? null };
     }
     return out;
   },
@@ -75,6 +75,12 @@ export const adaptadorFichero: AdaptadorExtras = {
   async guardarRelacion(issuerId, contactId, relacion) {
     await modificar((f) => {
       f.contactos[contactId] = { ...contacto(f, issuerId, contactId), relacion };
+    });
+  },
+
+  async guardarMensajeInvitacion(issuerId, contactId, mensaje) {
+    await modificar((f) => {
+      f.contactos[contactId] = { ...contacto(f, issuerId, contactId), mensajeInvitacion: mensaje };
     });
   },
 

@@ -7,7 +7,7 @@ import type { TextosInicio } from "@/components/home/textosInicio";
 
 // Inicio de /muestra. La hora del aviso de ejemplo (8:00 p. m.) se calcula en el navegador
 // para que cada persona la vea en su hora local.
-type Estado = "esperando" | "apagado" | "activo";
+type Estado = "esperando" | "apagado" | "activo" | "aceptacion";
 
 function proximasOcho() {
   const d = new Date();
@@ -29,8 +29,9 @@ export default function InicioDeMuestra({ t, app, estado }: { t: TextosInicio; a
       t={t}
       app={app}
       nombre="Mariana"
-      aceptados={estado === "apagado" ? ["Ana"] : []}
-      pendientes={estado === "apagado" ? ["Luis"] : ["Ana", "Luis"]}
+      aceptados={estado === "apagado" || estado === "aceptacion" ? ["Ana"] : []}
+      avisoAceptacion={estado === "aceptacion" ? { titulo: "Ana aceptó tu invitación", texto: "Ya puedes encender tu aviso.", enlace: "Ver contactos" } : undefined}
+      pendientes={estado === "apagado" || estado === "aceptacion" ? ["Luis"] : ["Ana", "Luis"]}
       sinEnviar={[]}
       rechazados={[]}
       vacio={false}

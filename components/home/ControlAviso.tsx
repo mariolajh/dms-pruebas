@@ -22,7 +22,12 @@ export default function ControlAviso({
   fireAt,
   frecuencia,
   dias,
+  estado,
+  detalle,
 }: {
+  // Con estado, el interruptor va a la derecha de un bloque con el estado y su explicación (Inicio apagado).
+  estado?: string;
+  detalle?: string;
   t: TextosInicio;
   encendido: boolean;
   fireAt: string;
@@ -149,21 +154,36 @@ export default function ControlAviso({
 
       {!dialogo && (
         <>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={encendido}
-              aria-describedby={bloqueado ? "no-se-puede-apagar" : undefined}
-              disabled={ocupado || bloqueado}
-              onClick={alternar}
-              className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border-2 border-text bg-surface transition-colors disabled:opacity-60 aria-checked:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
-            >
-              <span aria-hidden="true" className={`size-5 rounded-full transition-transform ${encendido ? "translate-x-7 bg-surface" : "translate-x-1 bg-text"}`} />
-              <span className="sr-only">{etiqueta}</span>
-            </button>
-            <span className="text-sm">{etiqueta}</span>
-          </div>
+          {(() => {
+            const interruptor = (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={encendido}
+                aria-describedby={bloqueado ? "no-se-puede-apagar" : undefined}
+                disabled={ocupado || bloqueado}
+                onClick={alternar}
+                className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border-2 border-text bg-surface transition-colors disabled:opacity-60 aria-checked:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+              >
+                <span aria-hidden="true" className={`size-5 rounded-full transition-transform ${encendido ? "translate-x-7 bg-surface" : "translate-x-1 bg-text"}`} />
+                <span className="sr-only">{etiqueta}</span>
+              </button>
+            );
+            return estado ? (
+              <div className="flex items-center justify-between gap-4 rounded-lg bg-surface-muted p-3">
+                <div className="min-w-0">
+                  <p className="font-semibold">{estado}</p>
+                  {detalle && <p className="text-sm text-text-muted">{detalle}</p>}
+                </div>
+                {interruptor}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                {interruptor}
+                <span className="text-sm">{etiqueta}</span>
+              </div>
+            );
+          })()}
           {bloqueado && (
             <p id="no-se-puede-apagar" className="text-sm text-text-muted">
               {t.noSePuedeApagar}

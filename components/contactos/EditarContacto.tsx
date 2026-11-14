@@ -38,7 +38,7 @@ export default function EditarContacto({
           </button>
         }
       >
-        <BarraTitulo titulo={t.titulo} volverHref="/contactos" />
+        <BarraTitulo titulo={t.titulo} volverHref={`/contactos/${contacto.id}`} />
         {errGeneral && (
           <p role="alert" className="rounded-lg border-2 border-danger bg-surface p-3 text-sm font-medium">
             {errGeneral}

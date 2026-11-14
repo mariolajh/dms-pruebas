@@ -17,12 +17,16 @@ export interface AdaptadorExtras {
   guardarRelacion(issuerId: string, contactId: string, relacion: string | null): Promise<void>;
   // Cuándo salió el último correo de invitación (null si falló). Sin esto no se puede decir "enviada".
   marcarInvitacion(issuerId: string, contactId: string, enviadaEn: string | null): Promise<void>;
+  // Mensaje personalizado de la invitación (null = General). Pide la columna invite_message (migración 0011).
+  guardarMensajeInvitacion(issuerId: string, contactId: string, mensaje: string | null): Promise<void>;
 }
 
 // Datos del contacto que todavía no tienen tabla propia.
 export type DatosContacto = {
   relacion: string | null;
   invitacionEnviadaEn: string | null;
+  // null = invitación General.
+  mensajeInvitacion: string | null;
 };
 
 export type Frecuencia = "once" | "daily" | "weekly";

@@ -17,6 +17,10 @@ const COMUNES = {
     gracia: "Tiempo de gracia",
     otro: "Otro",
     otroHoras: "Horas",
+    // Selector de hora propio (siempre en 12 h, igual en todos los navegadores).
+    selHora: "Hora",
+    selMinutos: "Minutos",
+    selMomento: "a. m. o p. m.",
     otroMinutos: "Minutos",
     graciaAyuda: "Si no confirmas a la hora, esperamos este tiempo antes de avisar a tus contactos.",
     // Pruebas del 12/11: 5 de 9 no entendieron para qué es el campo ni quién lo recibe.
@@ -39,7 +43,8 @@ const COMUNES = {
     subir: "Subir a {nombres}",
     bajar: "Bajar a {nombres}",
     errorNinguno: "Añade al menos un contacto a este aviso.",
-    pendiente: "Aún no aceptó",
+    // E-04 · Contactos: "Esperando que acepte la invitación. Podrás añadirla cuando acepte." (sin género).
+    pendiente: "Esperando que acepte la invitación. Podrás añadir al contacto cuando acepte.",
     sinEnviar: "Invitación sin enviar",
     soloAceptados: "Solo avisamos a quien aceptó tu invitación.",
     nadieAcepto: "Todavía nadie aceptó tu invitación. Hasta entonces no podemos avisar a nadie.",

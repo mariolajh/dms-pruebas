@@ -54,6 +54,25 @@ const COMUNES = {
     errorAlerta: "Tu aviso tiene una alerta en curso. Podrás cambiar el correo cuando la canceles.",
     noExiste: "Este contacto ya no está en tu lista.",
   },
+  // E-16 · Detalle del contacto.
+  detalle: {
+    titulo: "Detalle del contacto",
+    noRecibira: "No recibirá tus alertas",
+    aceptoEl: "Aceptó",
+    invitacionEnviada: "Invitación enviada",
+    sinEnviar: "Invitación sin enviar",
+    correo: "Correo",
+    ordenAviso: "Orden de aviso",
+    // Orden de aviso según la posición del contacto en el aviso. Si no está en el aviso: "Sin asignar".
+    orden: ["Primer contacto", "Segundo contacto", "Tercer contacto", "Cuarto contacto", "Quinto contacto"],
+    sinOrden: "Fuera de tu aviso",
+    mensaje: "Mensaje de invitación",
+    general: "General",
+    editarContacto: "Editar contacto",
+    quitarInvitacion: "Quitar invitación",
+    quitarContacto: "Quitar contacto",
+    noExiste: "Este contacto ya no está en tu lista.",
+  },
   lista: {
     editar: "Editar",
     guardado: "Cambios guardados",
@@ -115,7 +134,7 @@ const COMUNES = {
     cuerpo: (contacto: string, quien: string, app: string, enlace: string, mensaje = "") =>
       `<p>Hola, ${contacto}:</p>` +
       (mensaje ? `<p>${quien} te escribe: "${mensaje}"</p>` : "") +
-      `<p>${quien} te eligió como contacto de confianza en ${app}. Si un día no confirma a tiempo que está bien, te avisaremos para que puedas comunicarte con esa persona.</p>` +
+      `<p>${quien} te invita a ser su contacto de confianza en ${app}. Si un día no confirma a tiempo que está bien, te avisaremos para que puedas comunicarte con esa persona.</p>` +
       `<p>No tienes que instalar nada ni crear una cuenta.</p>` +
       `<p><a href="${enlace}">Ver la invitación</a></p>`,
   },

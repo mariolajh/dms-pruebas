@@ -9,6 +9,7 @@ import { textosAviso } from "@/components/aviso/textos";
 import ConfigurarAviso, { type ContactoOpcion, type Paso } from "@/components/aviso/ConfigurarAviso";
 import { textosContactos } from "@/components/contactos/textos";
 import FormContacto from "@/components/contactos/FormContacto";
+import DetalleContacto from "@/components/contactos/DetalleContacto";
 import EditarContacto from "@/components/contactos/EditarContacto";
 import ListaContactos, { type ContactoFila } from "@/components/contactos/ListaContactos";
 import { textosInicio } from "@/components/home/textosInicio";
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ pantalla:
 }
 
 const HACE_DOS_DIAS = new Date(Date.now() - 2 * 86_400_000).toISOString();
-const ENVIADA: DatosContacto = { relacion: null, invitacionEnviadaEn: HACE_DOS_DIAS };
+const ENVIADA: DatosContacto = { relacion: null, invitacionEnviadaEn: HACE_DOS_DIAS, mensajeInvitacion: null };
 const fila = (id: string, name: string, status: string): ContactoFila => ({ id, name, status, created_at: HACE_DOS_DIAS });
 const ANA = (status: string) => fila("ana", "Ana Ruiz", status);
 const LUIS = (status: string) => fila("luis", "Luis Mora", status);
@@ -101,11 +102,18 @@ export default async function PantallaDeMuestra({ params }: { params: Promise<{ 
         acepto
       />
     ),
+    "detalle-contacto": () => (
+      <DetalleContacto t={tContactos.detalle} tLista={tContactos.lista} c={{ id: "ana", name: "Ana Ruiz", email: "ana@correo.com", status: "accepted", relacion: "Hermana", fecha: "3 nov", enviada: true, orden: 1, numero: 1, mensaje: null }} />
+    ),
+    "detalle-contacto-espera": () => (
+      <DetalleContacto t={tContactos.detalle} tLista={tContactos.lista} c={{ id: "luis", name: "Luis Mora", email: "luis@correo.com", status: "pending", relacion: "Amigo", fecha: "12 nov", enviada: true, orden: 2, numero: 2, mensaje: "Luis, confío en ti para esto. Es solo un correo si algún día no te respondo." }} />
+    ),
     "contactos-en-espera": () => lista([ANA("pending")]),
     "contactos-acepto": () => lista([ANA("accepted"), LUIS("pending")]),
     "contactos-no-acepto": () => lista([ANA("rejected")]),
     "inicio-esperando": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="esperando" />,
     "inicio-apagado": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="apagado" />,
+    "inicio-ana-acepto": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="aceptacion" />,
     "inicio-activo": () => <InicioDeMuestra t={tInicio} app={marca.name} estado="activo" />,
     "aviso-hora": () => aviso("hora"),
     "aviso-contactos": () => aviso("contactos"),

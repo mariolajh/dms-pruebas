@@ -138,7 +138,7 @@ export default function ListaContactos({
                 <div className="flex items-center gap-3">
                   <Numero n={i + 1} />
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold">{c.name}</p>
+                    <Link href={`/contactos/${c.id}`} className="font-semibold">{c.name}</Link>
                     <p className="text-sm text-text-muted">{detalle}</p>
                   </div>
                   <Badge>
@@ -152,7 +152,7 @@ export default function ListaContactos({
                 {c.status === "pending" && !enviadaEn && <p className="text-sm font-medium text-danger">{t.noEnviada}</p>}
                 {/* Decisión del 14/11: las acciones van en la lista (menos toques). "Editar" abre E-17. */}
                 <div className="flex flex-wrap items-start gap-x-6">
-                  <Link href={`/contactos/${c.id}`} className={clases.enlace} aria-label={`${t.editar}: ${c.name}`}>
+                  <Link href={`/contactos/${c.id}/editar`} className={clases.enlace} aria-label={`${t.editar}: ${c.name}`}>
                     {t.editar}
                   </Link>
                   {c.status === "pending" && <Reenviar contactId={c.id} nombre={c.name} sinEnviar={!enviadaEn} t={t} />}

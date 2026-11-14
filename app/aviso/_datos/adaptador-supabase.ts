@@ -82,8 +82,28 @@ export function crearAdaptadorSupabase(supabase: SupabaseClient): AdaptadorExtra
         out[r.contact_id as string] = {
           relacion: (r.relationship as string | null) ?? null,
           invitacionEnviadaEn: (r.invite_sent_at as string | null) ?? null,
+          mensajeInvitacion: null,
         };
+      // El mensaje va en una consulta aparte: si la columna invite_message todavía no existe
+      // (migración 0011 sin aplicar), no se rompe nada y se ve como "General".
+      const { data: msgs, error: errMsg } = await supabase
+        .from("contact_details")
+        .select("contact_id, invite_message")
+        .eq("issuer_id", issuerId)
+        .in("contact_id", contactIds);
+      if (!errMsg)
+        for (const r of msgs ?? []) {
+          const previo = out[r.contact_id as string];
+          if (previo) previo.mensajeInvitacion = (r.invite_message as string | null) ?? null;
+        }
       return out;
+    },
+
+    async guardarMensajeInvitacion(issuerId, contactId, mensaje) {
+      const { error } = await supabase
+        .from("contact_details")
+        .upsert({ contact_id: contactId, issuer_id: issuerId, invite_message: mensaje }, { onConflict: "contact_id" });
+      if (error) throw new Error(`No se pudo guardar el mensaje de la invitación (${error.code}: ${error.message})`);
     },
 
     async guardarRelacion(issuerId, contactId, relacion) {

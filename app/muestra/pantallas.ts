@@ -25,6 +25,8 @@ export const GRUPOS: Grupo[] = [
     pantallas: [
       { id: "agregar-contacto", titulo: "Agregar contacto", nota: "De aquí sale el correo de invitación." },
       { id: "editar-contacto", titulo: "Editar contacto", nota: "Si cambia el correo, sale una invitación nueva y vuelve a En espera." },
+      { id: "detalle-contacto", titulo: "Detalle del contacto · Aceptó", nota: "Ana aceptó: se puede editar o quitar." },
+      { id: "detalle-contacto-espera", titulo: "Detalle del contacto · En espera", nota: "Luis no respondió: se ve su mensaje y se puede reenviar." },
       { id: "contactos-en-espera", titulo: "Contactos · En espera", nota: "Invitación enviada, sin respuesta." },
       { id: "contactos-acepto", titulo: "Contactos · Aceptó", nota: "Ana aceptó. Luis sigue en espera." },
       { id: "contactos-no-acepto", titulo: "Contactos · No aceptó", nota: "Se propone invitar a otra persona." },
@@ -37,6 +39,7 @@ export const GRUPOS: Grupo[] = [
     titulo: "Confirmar \"Estoy bien\" y cancelar la alerta",
     texto: "El aviso encendido. Aquí va \"Estoy bien\", 30 min antes de la hora.",
     pantallas: [
+      { id: "inicio-ana-acepto", titulo: "Inicio · Ana aceptó (propuesta)", nota: "PROPUESTA: cuadro encima del aviso cuando alguien acepta. Roza la tarjeta de la invitación." },
       { id: "inicio-activo", titulo: "Inicio · Aviso encendido", nota: "Hoy muestra el plazo y el interruptor para apagar." },
     ],
   },

@@ -139,7 +139,8 @@ export default function FormContacto({
             )}
           </div>
         </Tarjeta>
-        {!enAlta && (
+        {/* El mensaje de invitación va también en el alta (decisión de Mariola, 14/11). */}
+        {(
           <Tarjeta>
             <fieldset key={vuelta} className="space-y-3">
               <legend className="mb-3 font-semibold">{t.mensaje}</legend>
