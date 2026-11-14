@@ -50,14 +50,15 @@ const COMUNES = {
   dejarActivo: "Dejarlo activo",
   noSePuedeApagar: "No puedes apagar el aviso mientras esperamos tu confirmación.",
   encender: {
-    error: "No pudimos encender tu aviso. Revisa tu conexión e inténtalo otra vez.",
+    // El título ya dice "No pudimos encender tu aviso": aquí solo la segunda parte.
+    error: "Revisa tu conexión e inténtalo otra vez.",
     yaEncendido: "Tu aviso ya está encendido.",
     sinAviso: "Todavía no tienes un aviso. Configúralo primero.",
     sinAceptado: "Todavía nadie aceptó tu invitación. Podrás encenderlo cuando alguien acepte.",
     horaPasada: "La hora de tu aviso ya pasó. Edítalo y elige una hora más tarde.",
   },
   apagar: {
-    error: "No pudimos apagar tu aviso. Revisa tu conexión e inténtalo otra vez.",
+    error: "Revisa tu conexión e inténtalo otra vez.",
     enVentana: "No puedes apagar el aviso mientras esperamos tu confirmación.",
     enAlerta: "Tu aviso tiene una alerta en curso. Cancélala con \"Estoy bien, cancelar alerta\".",
   },
