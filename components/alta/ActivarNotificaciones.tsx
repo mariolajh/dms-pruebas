@@ -3,18 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Badge, BarraTitulo, EnlaceBoton, Pantalla, Progreso, Tarjeta, clases } from "@/components/emisor/ui";
 import Spinner from "@/components/emisor/Spinner";
+import { suscribirYGuardar } from "@/lib/pwa/suscribir";
 import type { TextosAlta } from "./textos";
 
 // Paso 1 del onboarding. Usa el mismo endpoint que el PushButton del núcleo (/api/push/subscribe).
 // Solo muestra "Notificaciones activas" cuando el servidor guardó la suscripción.
 
 type Fase = "inicio" | "activando" | "activas" | "no-activo";
-
-function urlBase64ToUint8Array(base64: string) {
-  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
-  const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
-  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
-}
 
 // enAlta: paso 1 del onboarding. Si no, se llega desde Ajustes y se vuelve allí.
 export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["notificaciones"]; enAlta: boolean }) {
@@ -36,7 +31,6 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
       return setFase("no-activo");
     }
     setFase("activando");
-    let paso = "permiso";
     try {
       const permiso = await Notification.requestPermission();
       if (permiso !== "granted") {
@@ -48,36 +42,20 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
         }).catch(() => {});
         return setFase("no-activo");
       }
-      paso = "service worker";
-      const reg = await navigator.serviceWorker.ready;
-      // Una suscripción vieja de este móvil (con otra clave o de otra cuenta) puede hacer fallar la nueva: se borra.
-      paso = "suscripción vieja";
-      const vieja = await reg.pushManager.getSubscription();
-      if (vieja) await vieja.unsubscribe();
-      paso = "suscripción";
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key) as BufferSource,
-      });
-      const json = sub.toJSON();
-      paso = "guardar";
-      const res = await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
-      });
-      const data = (await res.json().catch(() => ({ ok: false }))) as { ok: boolean };
-      if (!data.ok) throw new Error("subscribe");
+      const r = await suscribirYGuardar();
+      if (!r.ok) {
+        // Temporal, para las pruebas: se muestra el paso y el error real, que antes quedaba tapado.
+        setDetalle(`${t.errorGuardar} (${r.paso} · ${r.error})`);
+        fetch("/api/push/diagnostico", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paso: r.paso, error: r.error, permiso: Notification.permission, agente: navigator.userAgent }),
+        }).catch(() => {});
+        return setFase("no-activo");
+      }
       setFase("activas");
-    } catch (e) {
-      // Temporal, para las pruebas: se muestra el paso y el error real, que antes quedaba tapado.
-      const real = e instanceof Error ? `${e.name}: ${e.message}` : "error desconocido";
-      setDetalle(`${t.errorGuardar} (${paso} · ${real})`);
-      fetch("/api/push/diagnostico", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paso, error: real, permiso: Notification.permission, agente: navigator.userAgent }),
-      }).catch(() => {});
+    } catch {
+      setDetalle(t.errorGuardar);
       setFase("no-activo");
     }
   }

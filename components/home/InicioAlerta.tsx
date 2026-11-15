@@ -1,6 +1,7 @@
 import { Badge, Encabezado, Tarjeta } from "@/components/emisor/ui";
 import { rellenar } from "@/components/aviso/textos";
 import BarraNavegacion from "./BarraNavegacion";
+import SincronizarNotificaciones from "./SincronizarNotificaciones";
 import CancelarAlerta from "./CancelarAlerta";
 import type { TextosHome } from "./textos";
 import type { TextosInicio } from "./textosInicio";
@@ -11,6 +12,7 @@ export default function InicioAlerta({ t, textos, app, nombre }: { t: TextosInic
   return (
     <div className="fixed inset-0 mx-auto flex max-w-md flex-col bg-surface-muted">
       <main className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        <SincronizarNotificaciones />
         <Encabezado nombre={app} />
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>
         <Tarjeta>

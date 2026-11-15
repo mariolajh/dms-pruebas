@@ -3,6 +3,7 @@ import Toast from "@/components/emisor/Toast";
 import { rellenar } from "@/components/aviso/textos";
 import type { Frecuencia } from "@/app/aviso/_datos/tipos";
 import BarraNavegacion from "./BarraNavegacion";
+import SincronizarNotificaciones from "./SincronizarNotificaciones";
 import ControlAviso from "./ControlAviso";
 import EditarActivo from "./EditarActivo";
 import PlazoActivo from "./PlazoActivo";
@@ -30,6 +31,7 @@ export default function InicioActivo({
   return (
     <div className="fixed inset-0 mx-auto flex max-w-md flex-col bg-surface-muted">
       <main className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        <SincronizarNotificaciones />
         {encendidoAhora && <Toast texto={t.encendido} quitarParametro="encendido" />}
         {confirmadoAhora && <Toast texto={t.confirmadoToast} quitarParametro="confirmado" />}
         <Encabezado nombre={app} />

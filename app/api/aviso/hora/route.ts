@@ -3,6 +3,7 @@ import { Receiver } from "@upstash/qstash";
 import { createClient } from "@supabase/supabase-js";
 import { getBrand } from "@/lib/brand";
 import { sendPushToUser } from "@/lib/push";
+import { sendEmail } from "@/lib/email";
 
 // POST /api/aviso/hora
 // Lo llama QStash a la HORA del aviso (no al final del tiempo de gracia). Le manda a quien emite una
@@ -56,5 +57,22 @@ export async function POST(req: NextRequest) {
     url: "/home",
   }).catch(() => ({ sent: 0 }));
 
-  return NextResponse.json({ ok: true, push_sent: push.sent });
+  // Sin notificación (no hay dispositivo registrado o falló): se avisa por correo, para que nunca se quede sin enterarse (PRD S3).
+  let correo = false;
+  if (!push.sent) {
+    const { data: u } = await admin.auth.admin.getUserById(aviso.issuer_id);
+    const to = u?.user?.email;
+    if (to) {
+      const marca = getBrand().name;
+      correo = await sendEmail({
+        to,
+        subject: `${marca}: es hora de confirmar`,
+        html: gracia > 0
+          ? `<p>Es la hora de tu aviso. Entra en la app y confirma que estás bien.</p><p>Tienes ${gracia} minutos antes de que avisemos a tus contactos.</p>`
+          : `<p>Es la hora de tu aviso. Entra en la app y confirma que estás bien.</p>`,
+      }).then(() => true, () => false);
+    }
+  }
+
+  return NextResponse.json({ ok: true, push_sent: push.sent, correo });
 }
