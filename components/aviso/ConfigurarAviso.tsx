@@ -47,7 +47,6 @@ export default function ConfigurarAviso({
   limites,
   volverHref,
   enAlta,
-  pasoInicial = "hora",
 }: {
   // Nombres de quienes se dieron de baja desde su correo.
   salieron?: string[];
@@ -58,11 +57,9 @@ export default function ConfigurarAviso({
   volverHref: string;
   // En el alta este asistente entero es el "Paso 3 de 3". Al editar, cuenta sus dos pantallas.
   enAlta: boolean;
-  // Solo para /muestra: abre el asistente en un paso concreto.
-  pasoInicial?: Paso;
 }) {
   const router = useRouter();
-  const [paso, setPaso] = useState<Paso>(pasoInicial);
+  const [paso, setPaso] = useState<Paso>("hora");
 
   const [hora, setHora] = useState(inicial.horaPorDefecto);
   const [frecuencia, setFrecuencia] = useState<Frecuencia>(inicial.frecuencia);

@@ -16,10 +16,6 @@ const COMUNES = {
   aunNoVarios: "{nombres} aún no responden.",
   noEnviadaUno: "La invitación de {nombres} no se envió. Envíala desde Contactos.",
   noEnviadaVarios: "Las invitaciones de {nombres} no se enviaron. Envíalas desde Contactos.",
-  // Cuadro de Inicio cuando alguien acepta (aviso apagado).
-  aceptoUno: "{nombres} aceptó tu invitación",
-  aceptoVarios: "{nombres} aceptaron tu invitación",
-  aceptoTexto: "Ya puedes encender tu aviso.",
   // Alguien aceptó pero no está dentro del aviso. {nombres} sale de la lista de contactos.
   aceptoFueraUno: "{nombres} aceptó, pero no está en tu aviso. Pulsa Editar para agregar al contacto y poder encenderlo.",
   aceptoFueraVarios: "{nombres} aceptaron, pero no están en tu aviso. Pulsa Editar para agregar a los contactos y poder encenderlo.",

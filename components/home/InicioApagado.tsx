@@ -39,15 +39,12 @@ export default function InicioApagado({
   canceladaAhora,
   plazo,
   apagadoAhora,
-  avisoAceptacion,
 }: {
   aceptadosFuera?: string[];
   // Tras cancelar una falsa alarma: aviso breve ("Cancelaste la alerta").
   canceladaAhora?: string;
   // Quienes se dieron de baja desde su correo.
   salieron?: string[];
-  // PROPUESTA para Luna (solo se usa en /muestra): cuadro que avisa de que alguien aceptó.
-  avisoAceptacion?: { titulo: string; texto: string; enlace: string };
   t: TextosInicio;
   app: string;
   nombre: string;
@@ -72,21 +69,6 @@ export default function InicioApagado({
         {apagadoAhora && <Toast texto={t.apagadoListo} quitarParametro="apagado" />}
         <Encabezado nombre={app} />
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>
-        {avisoAceptacion && (
-          <section className="space-y-2 rounded-xl border-2 border-brand-primary bg-surface p-4" aria-label={avisoAceptacion.titulo}>
-            <div className="flex items-center gap-2">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M8 12.5l3 3 5-6" />
-              </svg>
-              <h2 className="font-semibold">{avisoAceptacion.titulo}</h2>
-            </div>
-            <p className="text-text-muted">{avisoAceptacion.texto}</p>
-            <Link href="/contactos" className={clases.enlace}>
-              {avisoAceptacion.enlace}
-            </Link>
-          </section>
-        )}
         <Tarjeta>
           {/* Jerarquía: 1) qué es (título y Editar), 2) en qué estado está y qué hacer, 3) avisos aparte. */}
           <div className="flex items-center justify-between gap-2">
