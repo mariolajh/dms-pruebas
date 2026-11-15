@@ -41,6 +41,11 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
       const permiso = await Notification.requestPermission();
       if (permiso !== "granted") {
         if (permiso === "denied") setDetalle(t.bloqueado);
+        fetch("/api/push/diagnostico", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paso: "permiso", error: `respuesta ${permiso}`, permiso, agente: navigator.userAgent }),
+        }).catch(() => {});
         return setFase("no-activo");
       }
       paso = "service worker";
@@ -68,6 +73,11 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
       // Temporal, para las pruebas: se muestra el paso y el error real, que antes quedaba tapado.
       const real = e instanceof Error ? `${e.name}: ${e.message}` : "error desconocido";
       setDetalle(`${t.errorGuardar} (${paso} · ${real})`);
+      fetch("/api/push/diagnostico", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paso, error: real, permiso: Notification.permission, agente: navigator.userAgent }),
+      }).catch(() => {});
       setFase("no-activo");
     }
   }
