@@ -14,7 +14,15 @@ import type { ResultadoEstado } from "./encender";
 //  - se guarda la confirmación;
 //  - el aviso pasa a su siguiente plazo (a diario: mañana; días elegidos: el siguiente día) y se
 //    reprograma el disparo en QStash; "Solo hoy" termina y el aviso se apaga.
-// Límite conocido: los días elegidos se calculan con el día UTC (todavía no se guarda la zona horaria).
+// Los días elegidos se miran en la zona de Buenos Aires (como /api/alert), no en UTC: después de las
+// 21:00 ya es otro día en UTC. Todavía no se guarda la zona de cada persona.
+const ZONA = "America/Argentina/Buenos_Aires";
+const DIA_CORTO_A_NUMERO: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+function diaSemanaEnZona(d: Date): number {
+  const corto = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: ZONA }).format(d);
+  return DIA_CORTO_A_NUMERO[corto];
+}
 
 function siguientePlazo(fire: Date, recurrencia: string, dias: number[]): Date | null {
   const DIA = 86_400_000;
@@ -22,7 +30,7 @@ function siguientePlazo(fire: Date, recurrencia: string, dias: number[]): Date |
   if (recurrencia === "weekly" && dias.length) {
     for (let i = 1; i <= 7; i++) {
       const d = new Date(fire.getTime() + i * DIA);
-      if (dias.includes(d.getUTCDay())) return d;
+      if (dias.includes(diaSemanaEnZona(d))) return d;
     }
   }
   return null; // "Solo hoy": no hay siguiente.
