@@ -36,18 +36,26 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
       return setFase("no-activo");
     }
     setFase("activando");
+    let paso = "permiso";
     try {
       const permiso = await Notification.requestPermission();
       if (permiso !== "granted") {
         if (permiso === "denied") setDetalle(t.bloqueado);
         return setFase("no-activo");
       }
+      paso = "service worker";
       const reg = await navigator.serviceWorker.ready;
+      // Una suscripción vieja de este móvil (con otra clave o de otra cuenta) puede hacer fallar la nueva: se borra.
+      paso = "suscripción vieja";
+      const vieja = await reg.pushManager.getSubscription();
+      if (vieja) await vieja.unsubscribe();
+      paso = "suscripción";
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key) as BufferSource,
       });
       const json = sub.toJSON();
+      paso = "guardar";
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,8 +64,10 @@ export default function ActivarNotificaciones({ t, enAlta }: { t: TextosAlta["no
       const data = (await res.json().catch(() => ({ ok: false }))) as { ok: boolean };
       if (!data.ok) throw new Error("subscribe");
       setFase("activas");
-    } catch {
-      setDetalle(t.errorGuardar);
+    } catch (e) {
+      // Temporal, para las pruebas: se muestra el paso y el error real, que antes quedaba tapado.
+      const real = e instanceof Error ? `${e.name}: ${e.message}` : "error desconocido";
+      setDetalle(`${t.errorGuardar} (${paso} · ${real})`);
       setFase("no-activo");
     }
   }
