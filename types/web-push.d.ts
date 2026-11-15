@@ -12,6 +12,6 @@ declare module "web-push" {
   export function sendNotification(
     subscription: PushSubscriptionJSON,
     payload: string,
-    options?: { TTL?: number }
+    options?: { TTL?: number; urgency?: "very-low" | "low" | "normal" | "high" }
   ): Promise<unknown>;
 }

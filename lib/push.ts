@@ -7,7 +7,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function sendPushToUser(
   admin: SupabaseClient,
   userId: string,
-  payload: { title: string; body: string; url: string }
+  payload: { title: string; body: string; url: string },
+  // ttlSegundos: cuánto guarda Google la notificación si el móvil no está conectado. Pasado ese tiempo ya no sirve.
+  ttlSegundos = 3600
 ) {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
@@ -31,7 +33,11 @@ export async function sendPushToUser(
       keys: { p256dh: s.p256dh, auth: s.auth },
     };
     try {
-      await webpush.sendNotification(sub, JSON.stringify(payload), { TTL: 3600 });
+      await webpush.sendNotification(sub, JSON.stringify(payload), {
+        TTL: ttlSegundos,
+        // Prioridad alta: sin esto Android (y más un Xiaomi con ahorro de batería) puede retrasar la notificación minutos u horas.
+        urgency: "high",
+      });
       sent++;
     } catch (e) {
       const status = (e as WebPushError).statusCode;

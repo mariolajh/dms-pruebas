@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     title: getBrand().name,
     body: gracia > 0 ? `Es hora de confirmar. Tienes ${gracia} min para decir que estás bien.` : "Es hora de confirmar que estás bien.",
     url: "/home",
-  }).catch(() => ({ sent: 0 }));
+  }, Math.max(gracia, 5) * 60).catch(() => ({ sent: 0 }));
 
   // Sin notificación (no hay dispositivo registrado o falló): se avisa por correo, para que nunca se quede sin enterarse (PRD S3).
   let correo = false;
