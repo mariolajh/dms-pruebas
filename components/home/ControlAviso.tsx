@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { encenderAviso, apagarAviso } from "@/app/aviso/encender";
@@ -34,7 +34,12 @@ export default function ControlAviso({
   detalle,
   notaEditar,
   graciaMin = 0,
+  titulo,
+  children,
 }: {
+  // Con título, el interruptor va a la derecha del título y lo que se pasa como hijo (el plazo) queda debajo.
+  titulo?: string;
+  children?: ReactNode;
   // Minutos de tiempo de gracia del aviso (pasada la hora, antes de avisar a los contactos).
   graciaMin?: number;
   // Aviso bajo el interruptor ("Para editarlo, apaga primero"). No sale mientras no se puede apagar.
@@ -144,8 +149,30 @@ export default function ControlAviso({
   const etiqueta = encendido ? t.tocaApagar : t.tocaEncender;
   const dialogo = fase === "confirmando";
 
+  const interruptor = (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={encendido}
+      aria-describedby={bloqueado ? "no-se-puede-apagar" : undefined}
+      disabled={ocupado || bloqueado}
+      onClick={alternar}
+      className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border-2 border-text bg-surface transition-colors disabled:opacity-60 aria-checked:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+    >
+      <span aria-hidden="true" className={`size-5 rounded-full transition-transform ${encendido ? "translate-x-7 bg-surface" : "translate-x-1 bg-text"}`} />
+      <span className="sr-only">{etiqueta}</span>
+    </button>
+  );
+
   return (
-    <div className="space-y-3">
+    <div className={titulo ? "space-y-5" : "space-y-3"}>
+      {titulo && (
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">{titulo}</h2>
+          {!dialogo && interruptor}
+        </div>
+      )}
+      {children}
       {(ocupado || fase === "error") && (
         <div
           ref={aviso}
@@ -197,21 +224,7 @@ export default function ControlAviso({
 
       {!dialogo && (
         <>
-          {(() => {
-            const interruptor = (
-              <button
-                type="button"
-                role="switch"
-                aria-checked={encendido}
-                aria-describedby={bloqueado ? "no-se-puede-apagar" : undefined}
-                disabled={ocupado || bloqueado}
-                onClick={alternar}
-                className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border-2 border-text bg-surface transition-colors disabled:opacity-60 aria-checked:bg-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
-              >
-                <span aria-hidden="true" className={`size-5 rounded-full transition-transform ${encendido ? "translate-x-7 bg-surface" : "translate-x-1 bg-text"}`} />
-                <span className="sr-only">{etiqueta}</span>
-              </button>
-            );
+          {!titulo && (() => {
             return estado ? (
               <div className="flex items-center justify-between gap-4 rounded-lg bg-surface-muted p-3">
                 <div className="min-w-0">

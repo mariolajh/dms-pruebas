@@ -14,7 +14,9 @@ export async function cancelarProgramado(messageId: string | null) {
 }
 
 // Sin QSTASH_TOKEN: en desarrollo se sigue sin programar (se avisa en el terminal); en producción falla.
-export async function programar(noticeId: string, fire: Date): Promise<{ ok: true; messageId: string | null } | { ok: false }> {
+// "recordatorio": la hora del aviso. Si hay tiempo de gracia, a esa hora se le manda a quien emite una notificación
+// ("Es hora de confirmar") y empieza a contar la gracia. El disparo de verdad (fire) es al acabar la gracia.
+export async function programar(noticeId: string, fire: Date, recordatorio?: Date): Promise<{ ok: true; messageId: string | null } | { ok: false }> {
   const token = process.env.QSTASH_TOKEN;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!token || !appUrl) {
@@ -32,6 +34,16 @@ export async function programar(noticeId: string, fire: Date): Promise<{ ok: tru
       body: { notice_id: noticeId },
       notBefore: Math.floor(fire.getTime() / 1000),
     });
+    // El recordatorio de la hora no es crítico: si falla, el disparo ya está programado y no se bloquea nada.
+    if (recordatorio && recordatorio.getTime() < fire.getTime() && recordatorio.getTime() - Date.now() > 30_000) {
+      await qstash
+        .publishJSON({
+          url: `${appUrl}/api/aviso/hora`,
+          body: { notice_id: noticeId, fire_at: recordatorio.toISOString() },
+          notBefore: Math.floor(recordatorio.getTime() / 1000),
+        })
+        .catch((e) => console.error("[qstash] el recordatorio de la hora falló:", e instanceof Error ? e.message : e));
+    }
     return { ok: true, messageId: "messageId" in res ? res.messageId : null };
   } catch (e) {
     console.error("[qstash] QStash falló:", e instanceof Error ? e.message : e);

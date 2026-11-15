@@ -44,13 +44,11 @@ export default async function HomePage({
   // sin aviso → onboarding · apagado → Inicio apagado · encendido / en alerta → lo de abajo.
   if (!aviso) redirect("/alta");
   if (aviso.state === "off") {
-    const [{ data: filas }, extrasAviso, { data: todosAceptados }, { count: confirmaciones }] = await Promise.all([
+    const [{ data: filas }, extrasAviso, { data: todosAceptados }] = await Promise.all([
       supabase.from("notice_contacts").select("position, contacts(id, name, status, accepted_at)").eq("notice_id", aviso.id).order("position"),
       adaptadorExtras(supabase).leerAviso(user.id, aviso.id).catch(() => null),
       // Contactos que ya aceptaron (para saber si alguno está fuera de este aviso).
       supabase.from("contacts").select("id, name").eq("issuer_id", user.id).eq("status", "accepted"),
-      // Si ya confirmó alguna vez (o canceló una alerta), el aviso ya se usó: el cuadro de "aceptó" ya no hace falta.
-      supabase.from("confirmations").select("id", { count: "exact", head: true }).eq("issuer_id", user.id),
     ]);
     const contactos = (filas ?? [])
       .map((f) => (Array.isArray(f.contacts) ? f.contacts[0] : f.contacts) as { id: string; name: string; status: string; accepted_at: string | null } | null)
@@ -64,9 +62,6 @@ export default async function HomePage({
     // Contactos que ya aceptaron pero no están dentro de este aviso (el nombre sale de la base).
     const dentro = new Set(contactos.map((c) => c.id));
     const aceptadosFuera = (todosAceptados ?? []).filter((c) => !dentro.has(c.id)).map((c) => primerNombre(c.name));
-    // Cuadro "X aceptó tu invitación": solo con aceptados recientes (7 días) que ya están en el aviso.
-    const hace7 = Date.now() - 7 * 86_400_000;
-    const recientes = (confirmaciones ?? 0) > 0 ? [] : contactos.filter((c) => c.status === "accepted" && c.accepted_at && new Date(c.accepted_at).getTime() > hace7).map((c) => primerNombre(c.name));
     // Quienes se dieron de baja desde su correo en los últimos 30 días: Inicio dice que se fueron.
     const { data: salidas } = await supabase
       .from("contacts")
@@ -77,7 +72,6 @@ export default async function HomePage({
     const tI = textosInicio(brand.variant);
     return (
       <InicioApagado
-        avisoAceptacion={recientes.length ? { titulo: rellenar(recientes.length === 1 ? tI.aceptoUno : tI.aceptoVarios, { nombres: listaNombres(recientes) }), texto: tI.aceptoTexto, enlace: tI.verContactos } : undefined}
         aceptadosFuera={aceptadosFuera}
         salieron={(salidas ?? []).map((c) => primerNombre(c.name as string))}
         t={textosInicio(brand.variant)}

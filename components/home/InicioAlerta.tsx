@@ -9,8 +9,8 @@ import type { TextosInicio } from "./textosInicio";
 // y el botón para cancelar una falsa alarma (mantener 2 s). Sin línea de tiempo (decisión del 14/11).
 export default function InicioAlerta({ t, textos, app, nombre }: { t: TextosInicio; textos: TextosHome; app: string; nombre: string }) {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
-      <main className="flex-1 space-y-4 p-4">
+    <div className="fixed inset-0 mx-auto flex max-w-md flex-col bg-surface-muted">
+      <main className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
         <Encabezado nombre={app} />
         <h1 className="text-2xl font-semibold">{nombre ? rellenar(t.hola, { nombre }) : t.holaSinNombre}</h1>
         <Tarjeta>

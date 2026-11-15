@@ -21,7 +21,7 @@ export default function BarraNavegacion({ t, actual }: { t: TextosInicio["nav"];
     { id: "ajustes", href: "/ajustes", label: t.ajustes },
   ] as const;
   return (
-    <nav aria-label="Principal" className="sticky bottom-0 border-t border-border/40 bg-surface">
+    <nav aria-label="Principal" className="shrink-0 border-t border-border/40 bg-surface">
       <ul className="grid grid-cols-4">
         {destinos.map((d) => (
           <li key={d.id}>

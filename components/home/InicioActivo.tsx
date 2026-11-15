@@ -28,8 +28,8 @@ export default function InicioActivo({
   encendidoAhora: boolean;
 }) {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
-      <main className="flex-1 space-y-4 p-4">
+    <div className="fixed inset-0 mx-auto flex max-w-md flex-col bg-surface-muted">
+      <main className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
         {encendidoAhora && <Toast texto={t.encendido} quitarParametro="encendido" />}
         {confirmadoAhora && <Toast texto={t.confirmadoToast} quitarParametro="confirmado" />}
         <Encabezado nombre={app} />
@@ -40,9 +40,10 @@ export default function InicioActivo({
             <Badge>{t.activo}</Badge>
             <EditarActivo fireAt={plazo.fireAt} texto={t.editar} aria={t.editarAria} titulo={t.editarDesactivado} />
           </div>
-          <h2 className="text-lg font-semibold">{t.tuAviso}</h2>
-          <PlazoActivo t={t} fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} />
-          <ControlAviso t={t} encendido fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} notaEditar={t.editarDesactivado} graciaMin={graciaMin} />
+          {/* El interruptor va junto al título "Tu aviso", y el plazo debajo. */}
+          <ControlAviso t={t} encendido fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} notaEditar={t.editarDesactivado} graciaMin={graciaMin} titulo={t.tuAviso}>
+            <PlazoActivo t={t} fireAt={plazo.fireAt} frecuencia={plazo.frecuencia} dias={plazo.dias} />
+          </ControlAviso>
         </Tarjeta>
       </main>
       <BarraNavegacion t={t.nav} actual="inicio" />

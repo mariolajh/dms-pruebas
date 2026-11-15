@@ -62,8 +62,8 @@ export default function InicioApagado({
   // Alguien aceptó pero no está dentro del aviso: no se puede encender todavía, pero no es "esperando".
   const hayFuera = !hayAceptado && aceptadosFuera.length > 0;
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
-      <main className="flex-1 space-y-4 p-4">
+    <div className="fixed inset-0 mx-auto flex max-w-md flex-col bg-surface-muted">
+      <main className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
         {/* Si alguien acepta mientras tanto, Inicio se actualiza solo. */}
         <RefrescarSolo />
         {canceladaAhora && <Toast texto={canceladaAhora} quitarParametro="alerta" />}

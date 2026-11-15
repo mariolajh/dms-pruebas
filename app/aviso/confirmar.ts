@@ -58,7 +58,7 @@ export async function confirmarEstoyBien(): Promise<ResultadoEstado> {
 
   let nuevoId: string | null = null;
   if (siguiente) {
-    const p = await programar(aviso.id as string, new Date(siguiente.getTime() + graciaMs));
+    const p = await programar(aviso.id as string, new Date(siguiente.getTime() + graciaMs), siguiente);
     if (!p.ok) return falla();
     nuevoId = p.messageId;
   }

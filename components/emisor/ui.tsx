@@ -22,11 +22,11 @@ export const clases = {
 // pie = botones fijos (flujos de pasos). nav = menú principal. Nunca los dos a la vez.
 export function Pantalla({ children, pie, nav }: { children: React.ReactNode; pie?: React.ReactNode; nav?: React.ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-surface-muted">
-      <main className="flex-1 space-y-4 p-4 pb-8">{children}</main>
+    <div className="fixed inset-0 mx-auto flex max-w-md flex-col bg-surface-muted">
+      <main className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 pb-8">{children}</main>
       {pie && (
         // Zona de acción fija: deja el foco visible al hacer scroll (WCAG 2.4.12).
-        <div className="sticky bottom-0 space-y-2 border-t border-border/40 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{pie}</div>
+        <div className="shrink-0 space-y-2 border-t border-border/40 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{pie}</div>
       )}
       {nav}
     </div>

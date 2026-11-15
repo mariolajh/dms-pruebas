@@ -54,7 +54,7 @@ export async function encenderAviso(fireAt: string): Promise<ResultadoEstado> {
   // disparo no avisaría nunca: si no se puede programar, se vuelve a apagar y se dice.
   // El aviso a los contactos sale al acabar el tiempo de gracia, no a la hora (PRD S1).
   const disparo = new Date(fire.getTime() + ((aviso.grace_minutes as number | null) ?? 0) * 60_000);
-  const programado = await programar(aviso.id, disparo);
+  const programado = await programar(aviso.id, disparo, fire);
   if (!programado.ok) {
     await s.supabase.from("notices").update({ state: "off", qstash_message_id: null, updated_at: new Date().toISOString() }).eq("id", aviso.id);
     return falla();
